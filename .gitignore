@@ -1,6 +1,7 @@
-venv/ 
-__pycache__/ 
-*.pyc 
-temp_* 
-*.pdf 
+venv/
+__pycache__/
+*.pyc
+temp_*
+*.pdf
 samples/
+.agents/
