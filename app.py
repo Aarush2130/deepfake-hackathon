@@ -693,12 +693,13 @@ elif demo_mode != "None (Upload Custom File)":
             2,
         )
 
-    active_path = "temp_preset.png"
+    with tempfile.NamedTemporaryFile(prefix="verichain_preset_", suffix=".png", delete=False) as p_file:
+        active_path = p_file.name
     cv2.imwrite(active_path, sample_img)
     with open(active_path, "rb") as f:
         file_bytes = f.read()
 
-# Reset state on file change
+# Reset state and clean up temp files on file change
 if (
     "last_processed_file" in st.session_state
     and st.session_state["last_processed_file"] != filename
@@ -709,7 +710,14 @@ if (
             os.remove(old_res["heatmap_path"])
         except Exception:
             pass
+    if "active_temp_path" in st.session_state and os.path.exists(st.session_state["active_temp_path"]):
+        try:
+            os.remove(st.session_state["active_temp_path"])
+        except Exception:
+            pass
     st.session_state.pop("results", None)
+
+st.session_state["active_temp_path"] = active_path
 
 # 8. Main Forensic Execution Pipeline
 if active_path and file_bytes:

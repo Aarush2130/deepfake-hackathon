@@ -1,5 +1,6 @@
 import datetime
 import os
+import tempfile
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
@@ -16,7 +17,10 @@ class ForensicPDF(FPDF):
         self.set_font("Helvetica", "I", 8)
         self.cell(0, 10, f"Page {self.page_no()} | Cryptographic Chain-of-Custody Verified", border=False, align="C")
 
-def generate_pdf(filename, file_hash, analyst, verdict, confidence, heatmap_path=None, faces_data=None, summary_note="", output_pdf="Evidence_Report.pdf"):
+def generate_pdf(filename, file_hash, analyst, verdict, confidence, heatmap_path=None, faces_data=None, summary_note="", output_pdf=None):
+    if not output_pdf:
+        with tempfile.NamedTemporaryFile(prefix="verichain_report_", suffix=".pdf", delete=False) as r_file:
+            output_pdf = r_file.name
     pdf = ForensicPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
