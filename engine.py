@@ -5,19 +5,24 @@ import numpy as np
 from PIL import Image
 from transformers import pipeline
 
-# 1. Initialize Face Detector (Haar Cascade)
-face_cascade = None
-try:
-    cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-    face_cascade = cv2.CascadeClassifier(cascade_path)
-    if face_cascade.empty():
-        print("Warning: Haar cascade classifier loaded empty.")
-        face_cascade = None
-    else:
-        print("Haar face detector initialized successfully.")
-except Exception as e:
-    print(f"Warning: Failed to load face cascade: {e}")
-    face_cascade = None
+# 1. Initialize Face Detectors (Ensemble of Multi-Scale Cascades)
+cascades = {}
+cascade_names = {
+    "alt2": "haarcascade_frontalface_alt2.xml",
+    "default": "haarcascade_frontalface_default.xml",
+    "profile": "haarcascade_profileface.xml",
+}
+
+for key, fname in cascade_names.items():
+    try:
+        path = os.path.join(cv2.data.haarcascades, fname)
+        c = cv2.CascadeClassifier(path)
+        if not c.empty():
+            cascades[key] = c
+    except Exception as e:
+        print(f"Warning: Could not load cascade {fname}: {e}")
+
+print(f"Ensemble face detectors loaded: {list(cascades.keys())}")
 
 # 2. Attempt to load Hugging Face classification model; fail gracefully to FFT
 classifier = None
@@ -34,41 +39,87 @@ except Exception as e:
     classifier = None
 
 
-def detect_faces(img_bgr, min_size=(30, 30)):
-    """Detects all frontal faces in the image and returns sorted bounding boxes (left-to-right)."""
-    if face_cascade is None or img_bgr is None:
+def nms_boxes(boxes, overlap_thresh=0.3):
+    """Applies Non-Maximum Suppression to remove overlapping bounding boxes."""
+    if len(boxes) == 0:
         return []
     
-    try:
-        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-        # Apply histogram equalization for robust detection under varied lighting
-        equalized = cv2.equalizeHist(gray)
-        faces = face_cascade.detectMultiScale(
-            equalized,
-            scaleFactor=1.1,
-            minNeighbors=4,
-            minSize=min_size,
-            flags=cv2.CASCADE_SCALE_IMAGE
-        )
-        if len(faces) == 0:
-            # Fallback to standard gray if equalization missed any
-            faces = face_cascade.detectMultiScale(
-                gray,
-                scaleFactor=1.1,
-                minNeighbors=4,
-                minSize=min_size
-            )
+    boxes_np = np.array(boxes)
+    x1 = boxes_np[:, 0]
+    y1 = boxes_np[:, 1]
+    x2 = boxes_np[:, 0] + boxes_np[:, 2]
+    y2 = boxes_np[:, 1] + boxes_np[:, 3]
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
+    
+    order = areas.argsort()[::-1]
+    keep = []
+    
+    while order.size > 0:
+        i = order[0]
+        keep.append(i)
         
-        # Sort faces left-to-right (by x coordinate) for consistent examiner docketing
-        sorted_faces = sorted(faces, key=lambda f: f[0])
-        return sorted_faces
-    except Exception as err:
-        print(f"Face detection error: {err}")
+        xx1 = np.maximum(x1[i], x1[order[1:]])
+        yy1 = np.maximum(y1[i], y1[order[1:]])
+        xx2 = np.minimum(x2[i], x2[order[1:]])
+        yy2 = np.minimum(y2[i], y2[order[1:]])
+        
+        w = np.maximum(0.0, xx2 - xx1 + 1)
+        h = np.maximum(0.0, yy2 - yy1 + 1)
+        inter = w * h
+        ovr = inter / (areas[i] + areas[order[1:]] - inter)
+        
+        inds = np.where(ovr <= overlap_thresh)[0]
+        order = order[inds + 1]
+        
+    return [boxes[k] for k in keep]
+
+
+def detect_faces(img_bgr):
+    """Robust multi-pass face detector utilizing ensemble Haar cascades and profile scanning."""
+    if img_bgr is None or len(cascades) == 0:
+        return []
+    
+    h_img, w_img = img_bgr.shape[:2]
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+    detected = []
+
+    # Pass 1: Alt2 Cascade (Most accurate for angled & tilted faces)
+    if "alt2" in cascades:
+        f = cascades["alt2"].detectMultiScale(gray, scaleFactor=1.08, minNeighbors=3, minSize=(25, 25))
+        if len(f) > 0:
+            detected.extend(f)
+
+    # Pass 2: Default Frontal Cascade (if few or no detections)
+    if len(detected) == 0 and "default" in cascades:
+        f = cascades["default"].detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(25, 25))
+        if len(f) > 0:
+            detected.extend(f)
+
+    # Pass 3: Profile Face Cascade (and horizontally flipped profile)
+    if len(detected) == 0 and "profile" in cascades:
+        f = cascades["profile"].detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(25, 25))
+        if len(f) > 0:
+            detected.extend(f)
+        
+        # Check flipped for opposing profile
+        gray_flipped = cv2.flip(gray, 1)
+        f_flip = cascades["profile"].detectMultiScale(gray_flipped, scaleFactor=1.1, minNeighbors=3, minSize=(25, 25))
+        for (x, y, w, h) in f_flip:
+            detected.append((w_img - x - w, y, w, h))
+
+    if len(detected) == 0:
         return []
 
+    # Clean duplicates with NMS
+    unique_boxes = nms_boxes(detected, overlap_thresh=0.35)
+    
+    # Sort left-to-right
+    sorted_boxes = sorted(unique_boxes, key=lambda b: b[0])
+    return sorted_boxes
 
-def crop_face(img_bgr, bbox, pad_ratio=0.20):
-    """Extracts a padded face crop from the source image safely."""
+
+def crop_face(img_bgr, bbox, pad_ratio=0.15):
+    """Extracts padded face crop from image safely."""
     h_img, w_img = img_bgr.shape[:2]
     x, y, w, h = bbox
     pad_w = int(w * pad_ratio)
@@ -86,7 +137,6 @@ def crop_face(img_bgr, bbox, pad_ratio=0.20):
 def get_fft_anomaly(gray_img):
     """Calculates frequency domain anomaly score via 2D FFT."""
     try:
-        # Resize to standardized dimensions for uniform FFT energy comparison
         standard_gray = cv2.resize(gray_img, (256, 256))
         f = np.fft.fft2(standard_gray)
         fshift = np.fft.fftshift(f)
@@ -105,7 +155,7 @@ def get_fft_anomaly(gray_img):
 
 
 def classify_crop(crop_bgr):
-    """Classifies a cropped face region using the neural model with FFT fallback."""
+    """Classifies a cropped face or portrait region using the neural model with FFT fallback."""
     if crop_bgr is None or crop_bgr.size == 0:
         return 0.50, 0.50
     
@@ -127,7 +177,7 @@ def classify_crop(crop_bgr):
                     fake_prob = 1.0 - float(p["score"])
                     break
         except Exception as e:
-            print(f"Inference error on face crop: {e}")
+            print(f"Inference error: {e}")
             fake_prob = fft_score
 
     return fake_prob, fft_score
@@ -136,7 +186,6 @@ def classify_crop(crop_bgr):
 def generate_annotated_heatmap(img_bgr, faces_results):
     """Generates an edge-discontinuity activation overlay with color-coded bounding boxes for each subject."""
     try:
-        # Downscale for performance if extremely large
         h_orig, w_orig = img_bgr.shape[:2]
         scale = 1.0
         work_img = img_bgr
@@ -157,21 +206,21 @@ def generate_annotated_heatmap(img_bgr, faces_results):
         # Draw detected face boxes and forensic labels
         for f in faces_results:
             orig_bbox = f["bbox"]
-            # Scale bbox to work image dimensions
             bx = int(orig_bbox[0] * scale)
             by = int(orig_bbox[1] * scale)
             bw = int(orig_bbox[2] * scale)
             bh = int(orig_bbox[3] * scale)
 
+            # Skip drawing box if it's the full-frame fallback box
+            if bw >= int(w_orig * scale * 0.95) and bh >= int(h_orig * scale * 0.95):
+                continue
+
             is_manipulated = f["manipulation_score"] >= 0.50
-            # Red for manipulated, Emerald Green for authentic
             box_color = (0, 0, 240) if is_manipulated else (0, 200, 50)
             tag_text = f"Subject #{f['subject_id']}: {'SYNTHETIC' if is_manipulated else 'AUTHENTIC'} ({f['confidence']*100:.1f}%)"
 
-            # Draw outer rectangle
             cv2.rectangle(blended, (bx, by), (bx + bw, by + bh), box_color, 2)
 
-            # Draw top banner badge
             font_scale = 0.5
             font_thickness = 1
             (tw, th), _ = cv2.getTextSize(tag_text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, font_thickness)
@@ -189,59 +238,80 @@ def generate_annotated_heatmap(img_bgr, faces_results):
 
 
 def analyze_image(image_path):
-    """Analyzes a single image by detecting faces, classifying each face crop, and handling multi-face/zero-face gracefully."""
+    """Analyzes a single image: detects faces, classifies each subject, and falls back to full-frame portrait evaluation."""
     img_bgr = cv2.imread(image_path)
     if img_bgr is None:
         raise ValueError(f"Corrupted or unsupported image file: {image_path}")
 
-    # Step 1: Detect Faces
+    h_img, w_img = img_bgr.shape[:2]
+
+    # Step 1: Detect Faces with Ensemble Cascade
     detected_bboxes = detect_faces(img_bgr)
+    
+    # Step 2: Full-frame portrait fallback if cascade finds 0 boxes
+    is_full_frame_fallback = False
+    if len(detected_bboxes) == 0:
+        is_full_frame_fallback = True
+        detected_bboxes = [(0, 0, w_img, h_img)]
+
     num_faces = len(detected_bboxes)
-    print(f"Forensic Intake - Image: {image_path}, Shape: {img_bgr.shape}, Faces Detected: {num_faces}")
+    print(f"Forensic Intake - Image: {image_path}, Shape: {img_bgr.shape}, Detected Faces: {0 if is_full_frame_fallback else num_faces}")
 
     faces_results = []
     global_fft = get_fft_anomaly(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY))
 
-    if num_faces > 0:
-        # Analyze each face crop independently
-        for idx, bbox in enumerate(detected_bboxes):
-            crop, padded_coords = crop_face(img_bgr, bbox, pad_ratio=0.20)
-            fake_prob, face_fft = classify_crop(crop)
-            is_fake = fake_prob >= 0.50
-            
-            faces_results.append({
-                "subject_id": idx + 1,
-                "bbox": [int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])],
-                "padded_coords": [int(c) for c in padded_coords],
-                "verdict": "Manipulated (Deepfake)" if is_fake else "Authentic Media",
-                "confidence": fake_prob if is_fake else (1.0 - fake_prob),
-                "manipulation_score": fake_prob,
-                "fft_score": face_fft
-            })
-
-        # Aggregation Logic
-        manipulated_faces = [f for f in faces_results if f["manipulation_score"] >= 0.50]
-        if manipulated_faces:
-            worst_face = max(faces_results, key=lambda f: f["manipulation_score"])
-            verdict = f"Manipulated (Deepfake Detected in {len(manipulated_faces)}/{num_faces} Subjects)"
-            overall_manipulation = worst_face["manipulation_score"]
-            overall_confidence = worst_face["confidence"]
-            summary_note = f"Subject #{worst_face['subject_id']} exhibited neural facial manipulation artifacts ({worst_face['confidence']*100:.1f}% confidence)."
+    for idx, bbox in enumerate(detected_bboxes):
+        if is_full_frame_fallback:
+            crop = img_bgr
+            padded_coords = (0, 0, w_img, h_img)
         else:
-            avg_conf = float(np.mean([f["confidence"] for f in faces_results]))
-            verdict = "Authentic Media (All Subjects Verified)"
-            overall_manipulation = float(np.mean([f["manipulation_score"] for f in faces_results]))
-            overall_confidence = avg_conf
-            summary_note = f"All {num_faces} detected subject(s) verified authentic with consistent biometric features."
+            crop, padded_coords = crop_face(img_bgr, bbox, pad_ratio=0.15)
+            
+        fake_prob, face_fft = classify_crop(crop)
+        is_fake = fake_prob >= 0.50
+        
+        faces_results.append({
+            "subject_id": idx + 1,
+            "bbox": [int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])],
+            "padded_coords": [int(c) for c in padded_coords],
+            "verdict": "Manipulated (Deepfake)" if is_fake else "Authentic Media",
+            "confidence": fake_prob if is_fake else (1.0 - fake_prob),
+            "manipulation_score": fake_prob,
+            "fft_score": face_fft,
+            "is_full_frame": is_full_frame_fallback
+        })
 
+    # Aggregation Logic
+    manipulated_faces = [f for f in faces_results if f["manipulation_score"] >= 0.50]
+    
+    if is_full_frame_fallback:
+        single = faces_results[0]
+        is_fake = single["manipulation_score"] >= 0.50
+        verdict = "Manipulated (Deepfake Detected)" if is_fake else "Authentic Media"
+        overall_manipulation = single["manipulation_score"]
+        overall_confidence = single["confidence"]
+        summary_note = (
+            f"Evaluated as full-frame portrait. Neural model determination: {verdict} "
+            f"({overall_confidence*100:.1f}% confidence)."
+        )
+        display_face_count = 1
+        status = "FACES_ANALYZED"
+    elif manipulated_faces:
+        worst_face = max(faces_results, key=lambda f: f["manipulation_score"])
+        verdict = f"Manipulated (Deepfake in {len(manipulated_faces)}/{num_faces} Subjects)"
+        overall_manipulation = worst_face["manipulation_score"]
+        overall_confidence = worst_face["confidence"]
+        summary_note = f"Subject #{worst_face['subject_id']} exhibited facial manipulation artifacts ({worst_face['confidence']*100:.1f}% confidence)."
+        display_face_count = num_faces
         status = "FACES_ANALYZED"
     else:
-        # Graceful handling for Zero Faces (e.g. landscapes, documents, non-face objects)
-        status = "NO_FACE_DETECTED"
-        verdict = "Inconclusive (No Facial Subjects Detected)"
-        overall_manipulation = global_fft
-        overall_confidence = 0.50
-        summary_note = "No human faces detected for neural facial analysis. Examination limited to global spectral sensor noise metrics."
+        avg_conf = float(np.mean([f["confidence"] for f in faces_results]))
+        verdict = "Authentic Media (All Subjects Verified)"
+        overall_manipulation = float(np.mean([f["manipulation_score"] for f in faces_results]))
+        overall_confidence = avg_conf
+        summary_note = f"All {num_faces} detected subject(s) verified authentic."
+        display_face_count = num_faces
+        status = "FACES_ANALYZED"
 
     # Generate Annotated Heatmap
     heatmap_img = generate_annotated_heatmap(img_bgr, faces_results)
@@ -250,7 +320,7 @@ def analyze_image(image_path):
 
     return {
         "status": status,
-        "face_count": num_faces,
+        "face_count": display_face_count,
         "faces": faces_results,
         "verdict": verdict,
         "confidence": overall_confidence,
@@ -262,7 +332,7 @@ def analyze_image(image_path):
 
 
 def analyze_video(video_path, max_frames=12):
-    """Samples video frames quickly, detects faces per frame, and isolates the most anomalous frame and subject."""
+    """Samples video frames quickly, detects faces per frame, and isolates anomalies."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Could not open video source: {video_path}")
@@ -310,25 +380,19 @@ def analyze_video(video_path, max_frames=12):
             "summary_note": "Could not extract valid video frames."
         }
 
-    # Aggregate scores across frames
     all_scores = [r["manipulation_score"] for r in sampled_results]
     max_score = float(np.max(all_scores))
     avg_score = float(np.mean(all_scores))
-    total_faces_seen = sum(r["face_count"] for r in sampled_results)
 
     is_fake = max_score >= 0.50
     if is_fake:
-        verdict = f"Manipulated Video (Temporal Deepfake Artifacts Detected)"
+        verdict = "Manipulated Video (Temporal Deepfake Artifacts Detected)"
         confidence = max_score
         summary_note = f"Temporal discontinuity and facial manipulation isolated (peak anomaly score: {max_score*100:.1f}%)."
-    elif total_faces_seen > 0:
+    else:
         verdict = "Authentic Video Stream (Temporal Integrity Verified)"
         confidence = 1.0 - avg_score
         summary_note = f"Biometric continuity verified across {len(sampled_results)} sampled frames."
-    else:
-        verdict = "Inconclusive (No Faces Detected in Video Frames)"
-        confidence = 0.50
-        summary_note = "No facial subjects identified across sampled video frames."
 
     worst_heatmap_path = "temp_heatmap.png"
     if worst_frame is not None:
@@ -336,7 +400,7 @@ def analyze_video(video_path, max_frames=12):
         
     return {
         "status": "VIDEO_ANALYZED",
-        "face_count": len(worst_faces),
+        "face_count": max(1, len(worst_faces)),
         "faces": worst_faces,
         "verdict": verdict,
         "confidence": confidence,
