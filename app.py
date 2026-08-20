@@ -4,6 +4,7 @@ import tempfile
 import cv2
 import numpy as np
 import streamlit as st
+from engine import get_engine_status
 
 # Set UI Configuration
 st.set_page_config(
@@ -17,9 +18,22 @@ st.caption(
     "Forensic Media Integrity & Multi-Subject Chain-of-Custody Suite for Law Enforcement and Judicial Inquests"
 )
 
+# Engine Status Badge
+engine_info = get_engine_status()
+
 # Sidebar - Evidence Intake & Case Metadata
 with st.sidebar:
     st.header("📋 Case File Docket")
+    
+    # Live Engine Status indicator
+    if engine_info.get("is_neural", False):
+        st.success(f"**Engine:** {engine_info['badge']}")
+    else:
+        st.warning(f"**Engine:** {engine_info['badge']}")
+        
+    st.caption(f"Backend: `{engine_info['model_name']}`")
+    st.divider()
+
     analyst_name = st.text_input(
         "Investigator / Analyst", value="Detective J. Miller, Digital Forensics"
     )
@@ -56,7 +70,6 @@ if uploaded_file is not None:
     filename = uploaded_file.name
     suffix = os.path.splitext(filename)[1].lower()
 
-    # Write to temporary file safely
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tfile:
         tfile.write(file_bytes)
         active_path = tfile.name
@@ -97,6 +110,13 @@ if (
     "last_processed_file" in st.session_state
     and st.session_state["last_processed_file"] != filename
 ):
+    # Clean up old heatmap if exists
+    old_res = st.session_state.get("results", {})
+    if old_res and "heatmap_path" in old_res and old_res["heatmap_path"] and os.path.exists(old_res["heatmap_path"]):
+        try:
+            os.remove(old_res["heatmap_path"])
+        except Exception:
+            pass
     st.session_state.pop("results", None)
 
 if active_path and file_bytes:
@@ -125,7 +145,7 @@ if active_path and file_bytes:
             type="primary",
         ):
             with st.spinner(
-                "Detecting facial subjects, isolating crops, and analyzing spectral anomalies..."
+                "Detecting facial subjects, evaluating feature boundaries, and calculating spectral anomalies..."
             ):
                 try:
                     # Dynamically route between Video and Image Engine
@@ -162,7 +182,7 @@ if active_path and file_bytes:
 
         mcol1, mcol2, mcol3, mcol4 = st.columns(4)
         with mcol1:
-            st.metric("Detected Subjects", f"{res.get('face_count', 0)} Face(s)")
+            st.metric("Detected Subjects", f"{res.get('face_count', 1)} Subject(s)")
         with mcol2:
             st.metric("Aggregate Confidence", f"{res['confidence'] * 100:.2f}%")
         with mcol3:
@@ -170,22 +190,18 @@ if active_path and file_bytes:
         with mcol4:
             st.metric("Spectral Residual Metric", f"{res['fft_score']:.4f}")
 
-        if is_no_face:
-            st.warning(
-                "ℹ️ **Zero Facial Subjects Detected:** The system engaged non-facial spectral frequency & sensor noise mode. "
-                "For facial biometric and deepfake analysis, provide media containing human subjects."
-            )
-
         # Subject-by-Subject Forensic Breakdown (if faces exist)
         faces_list = res.get("faces", [])
         if faces_list:
             st.subheader(f"👥 Subject-by-Subject Facial Isolation ({len(faces_list)} Subjects)")
             
-            # Display Table of Subjects
             table_data = []
             for f in faces_list:
                 subj_id = f"Subject #{f['subject_id']}"
-                bbox = f"[{f['bbox'][0]}, {f['bbox'][1]}, {f['bbox'][2]}, {f['bbox'][3]}]"
+                if f.get("is_full_frame", False):
+                    bbox = "Full Frame"
+                else:
+                    bbox = f"[{f['bbox'][0]}, {f['bbox'][1]}, {f['bbox'][2]}, {f['bbox'][3]}]"
                 subj_verdict = "🚨 Manipulated (Deepfake)" if f["manipulation_score"] >= 0.50 else "✅ Authentic"
                 manip_prob = f"{f['manipulation_score']*100:.1f}%"
                 conf = f"{f['confidence']*100:.1f}%"
@@ -199,16 +215,16 @@ if active_path and file_bytes:
             
             st.dataframe(table_data, hide_index=True)
 
-        st.subheader("🔍 Visual Evidence & Boundary Artifact Localization")
+        st.subheader("🔍 Spatial Discontinuity & Feature Overlay")
         rcol1, rcol2 = st.columns(2)
         with rcol1:
-            if "heatmap_path" in res and os.path.exists(res["heatmap_path"]):
+            if "heatmap_path" in res and res["heatmap_path"] and os.path.exists(res["heatmap_path"]):
                 st.image(
                     res["heatmap_path"],
-                    caption="Neural Attention, Subject Bounding Boxes & Spectral Edge Overlay"
+                    caption="Feature Heatmap & Subject Isolation Overlay (Regions of Visual Interest)"
                 )
             else:
-                st.info("Heatmap visualization unavailable for this input.")
+                st.info("Visual overlay unavailable for this input.")
 
         with rcol2:
             st.markdown("#### Forensic Anomaly Breakdown")

@@ -1,4 +1,5 @@
 import os
+import uuid
 import cv2
 import torch
 import numpy as np
@@ -28,18 +29,40 @@ print(f"Ensemble face detectors loaded: {list(cascades.keys())}")
 classifier = None
 try:
     print("Loading deepfake classification neural model...")
+    device_id = 0 if torch.cuda.is_available() else -1
     classifier = pipeline(
         "image-classification",
         model="prithivMLmods/Deep-Fake-Detector-v2-Model",
-        device=0 if torch.cuda.is_available() else -1
+        device=device_id
     )
-    print("AI Model loaded successfully.")
+    print(f"AI Model loaded successfully on {'GPU (CUDA)' if device_id == 0 else 'CPU'}.")
 except Exception as e:
-    print(f"Warning: Model unavailable ({e}). Defaulting to FFT frequency analysis.")
+    print(f"Warning: Neural model unavailable ({e}). Defaulting to FFT frequency analysis.")
     classifier = None
 
 
-def nms_boxes(boxes, overlap_thresh=0.3):
+def get_engine_status():
+    """Returns the operational status and active backend of the forensic engine."""
+    if classifier is not None:
+        device_str = "GPU (CUDA)" if torch.cuda.is_available() else "CPU"
+        return {
+            "mode": "Neural Model Active",
+            "model_name": "prithivMLmods/Deep-Fake-Detector-v2-Model",
+            "device": device_str,
+            "is_neural": True,
+            "badge": f"Neural ViT Model ({device_str})"
+        }
+    else:
+        return {
+            "mode": "FFT Spectral Fallback",
+            "model_name": "2D Fast Fourier Energy Analysis",
+            "device": "CPU",
+            "is_neural": False,
+            "badge": "FFT Spectral Fallback (Offline Mode)"
+        }
+
+
+def nms_boxes(boxes, overlap_thresh=0.35):
     """Applies Non-Maximum Suppression to remove overlapping bounding boxes."""
     if len(boxes) == 0:
         return []
@@ -155,7 +178,7 @@ def get_fft_anomaly(gray_img):
 
 
 def classify_crop(crop_bgr):
-    """Classifies a cropped face or portrait region using the neural model with FFT fallback."""
+    """Classifies a cropped face or portrait region using the neural model with explicit label resolution and FFT fallback."""
     if crop_bgr is None or crop_bgr.size == 0:
         return 0.50, 0.50
     
@@ -168,16 +191,28 @@ def classify_crop(crop_bgr):
             crop_rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
             pil_img = Image.fromarray(crop_rgb)
             preds = classifier(pil_img)
+            
+            # Explicit, non-fragile label matching for various HF classification models
             for p in preds:
-                lbl = p["label"].lower()
-                if "fake" in lbl or "synthetic" in lbl or "manipulated" in lbl:
-                    fake_prob = float(p["score"])
+                lbl = str(p["label"]).strip().lower()
+                score = float(p["score"])
+                
+                # Synthetic / Fake class indicators
+                if lbl in ["deepfake", "fake", "synthetic", "manipulated", "ai-generated", "label_1"]:
+                    fake_prob = score
                     break
-                elif "real" in lbl or "authentic" in lbl:
-                    fake_prob = 1.0 - float(p["score"])
+                # Authentic / Real class indicators
+                elif lbl in ["realism", "real", "authentic", "genuine", "original", "label_0"]:
+                    fake_prob = 1.0 - score
+                    break
+                elif "fake" in lbl or "synth" in lbl:
+                    fake_prob = score
+                    break
+                elif "real" in lbl or "auth" in lbl:
+                    fake_prob = 1.0 - score
                     break
         except Exception as e:
-            print(f"Inference error: {e}")
+            print(f"Neural inference error on crop: {e}. Fallback to FFT: {fft_score:.4f}")
             fake_prob = fft_score
 
     return fake_prob, fft_score
@@ -237,26 +272,17 @@ def generate_annotated_heatmap(img_bgr, faces_results):
         return img_bgr
 
 
-def analyze_image(image_path):
-    """Analyzes a single image: detects faces, classifies each subject, and falls back to full-frame portrait evaluation."""
-    img_bgr = cv2.imread(image_path)
-    if img_bgr is None:
-        raise ValueError(f"Corrupted or unsupported image file: {image_path}")
-
+def _evaluate_frame_in_memory(img_bgr):
+    """Internal helper to detect faces and compute forensic scores entirely in memory without disk I/O."""
     h_img, w_img = img_bgr.shape[:2]
 
-    # Step 1: Detect Faces with Ensemble Cascade
     detected_bboxes = detect_faces(img_bgr)
-    
-    # Step 2: Full-frame portrait fallback if cascade finds 0 boxes
     is_full_frame_fallback = False
     if len(detected_bboxes) == 0:
         is_full_frame_fallback = True
         detected_bboxes = [(0, 0, w_img, h_img)]
 
     num_faces = len(detected_bboxes)
-    print(f"Forensic Intake - Image: {image_path}, Shape: {img_bgr.shape}, Detected Faces: {0 if is_full_frame_fallback else num_faces}")
-
     faces_results = []
     global_fft = get_fft_anomaly(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY))
 
@@ -281,7 +307,6 @@ def analyze_image(image_path):
             "is_full_frame": is_full_frame_fallback
         })
 
-    # Aggregation Logic
     manipulated_faces = [f for f in faces_results if f["manipulation_score"] >= 0.50]
     
     if is_full_frame_fallback:
@@ -295,7 +320,6 @@ def analyze_image(image_path):
             f"({overall_confidence*100:.1f}% confidence)."
         )
         display_face_count = 1
-        status = "FACES_ANALYZED"
     elif manipulated_faces:
         worst_face = max(faces_results, key=lambda f: f["manipulation_score"])
         verdict = f"Manipulated (Deepfake in {len(manipulated_faces)}/{num_faces} Subjects)"
@@ -303,7 +327,6 @@ def analyze_image(image_path):
         overall_confidence = worst_face["confidence"]
         summary_note = f"Subject #{worst_face['subject_id']} exhibited facial manipulation artifacts ({worst_face['confidence']*100:.1f}% confidence)."
         display_face_count = num_faces
-        status = "FACES_ANALYZED"
     else:
         avg_conf = float(np.mean([f["confidence"] for f in faces_results]))
         verdict = "Authentic Media (All Subjects Verified)"
@@ -311,28 +334,40 @@ def analyze_image(image_path):
         overall_confidence = avg_conf
         summary_note = f"All {num_faces} detected subject(s) verified authentic."
         display_face_count = num_faces
-        status = "FACES_ANALYZED"
-
-    # Generate Annotated Heatmap
-    heatmap_img = generate_annotated_heatmap(img_bgr, faces_results)
-    heatmap_path = "temp_heatmap.png"
-    cv2.imwrite(heatmap_path, heatmap_img)
 
     return {
-        "status": status,
+        "status": "FACES_ANALYZED",
         "face_count": display_face_count,
         "faces": faces_results,
         "verdict": verdict,
         "confidence": overall_confidence,
         "manipulation_score": overall_manipulation,
         "fft_score": global_fft,
-        "heatmap_path": heatmap_path,
         "summary_note": summary_note
     }
 
 
+def analyze_image(image_path):
+    """Analyzes a single image safely, generating a unique collision-free heatmap artifact."""
+    img_bgr = cv2.imread(image_path)
+    if img_bgr is None:
+        raise ValueError(f"Corrupted or unsupported image file: {image_path}")
+
+    # Evaluate in memory
+    res = _evaluate_frame_in_memory(img_bgr)
+    
+    # Generate unique UUID heatmap file to prevent race conditions in concurrent sessions
+    heatmap_img = generate_annotated_heatmap(img_bgr, res["faces"])
+    unique_id = uuid.uuid4().hex[:10]
+    heatmap_path = f"temp_heatmap_{unique_id}.png"
+    cv2.imwrite(heatmap_path, heatmap_img)
+    
+    res["heatmap_path"] = heatmap_path
+    return res
+
+
 def analyze_video(video_path, max_frames=12):
-    """Samples video frames quickly, detects faces per frame, and isolates anomalies."""
+    """Fast in-memory video frame analysis without redundant disk writes, isolating the worst anomaly frame."""
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Could not open video source: {video_path}")
@@ -351,18 +386,15 @@ def analyze_video(video_path, max_frames=12):
         if not ret:
             break
         if frame_idx % step == 0:
-            temp_path = f"temp_frame_{frame_idx}.png"
-            cv2.imwrite(temp_path, frame)
-            try:
-                res = analyze_image(temp_path)
-                sampled_results.append(res)
-                if res["manipulation_score"] > worst_score:
-                    worst_score = res["manipulation_score"]
-                    worst_frame = frame.copy()
-                    worst_faces = res.get("faces", [])
-            finally:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+            # Process directly in memory - NO DISK WRITE per sampled frame!
+            res = _evaluate_frame_in_memory(frame)
+            sampled_results.append(res)
+            
+            if res["manipulation_score"] > worst_score:
+                worst_score = res["manipulation_score"]
+                worst_frame = frame.copy()
+                worst_faces = res.get("faces", [])
+                
         frame_idx += 1
         
     cap.release()
@@ -376,7 +408,7 @@ def analyze_video(video_path, max_frames=12):
             "confidence": 0.0,
             "manipulation_score": 0.50,
             "fft_score": 0.50,
-            "heatmap_path": "temp_heatmap.png",
+            "heatmap_path": None,
             "summary_note": "Could not extract valid video frames."
         }
 
@@ -394,9 +426,13 @@ def analyze_video(video_path, max_frames=12):
         confidence = 1.0 - avg_score
         summary_note = f"Biometric continuity verified across {len(sampled_results)} sampled frames."
 
-    worst_heatmap_path = "temp_heatmap.png"
+    # Generate unique heatmap ONLY for the single worst frame
+    unique_id = uuid.uuid4().hex[:10]
+    worst_heatmap_path = f"temp_heatmap_{unique_id}.png"
     if worst_frame is not None:
         cv2.imwrite(worst_heatmap_path, generate_annotated_heatmap(worst_frame, worst_faces))
+    else:
+        worst_heatmap_path = None
         
     return {
         "status": "VIDEO_ANALYZED",
