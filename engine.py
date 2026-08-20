@@ -267,9 +267,7 @@ def analyze_image(image_path):
         summary_note = f"All {num_faces} detected subject(s) verified authentic."
         display_face_count = num_faces
 
-    import tempfile
-    with tempfile.NamedTemporaryFile(prefix="verichain_heatmap_", suffix=".png", delete=False) as h_file:
-        heatmap_path = h_file.name
+    heatmap_path = "temp_heatmap.png"
     cv2.imwrite(heatmap_path, generate_annotated_heatmap(img_bgr, faces_results))
 
     return {
@@ -298,8 +296,7 @@ def analyze_video(video_path, max_frames=10):
         if not ret:
             break
         if frame_idx % step == 0:
-            with tempfile.NamedTemporaryFile(prefix="verichain_frame_", suffix=".png", delete=False) as f_file:
-                temp_path = f_file.name
+            temp_path = f"temp_frame_{frame_idx}.png"
             cv2.imwrite(temp_path, frame)
             try:
                 res = analyze_image(temp_path)
@@ -310,10 +307,7 @@ def analyze_video(video_path, max_frames=10):
                     worst_faces = res.get("faces", [])
             finally:
                 if os.path.exists(temp_path):
-                    try:
-                        os.remove(temp_path)
-                    except Exception:
-                        pass
+                    os.remove(temp_path)
         frame_idx += 1
     cap.release()
 
@@ -321,10 +315,8 @@ def analyze_video(video_path, max_frames=10):
     avg_score = float(np.mean(scores)) if scores else 0.50
     is_fake = max_score >= 0.50
 
-    worst_heatmap_path = None
+    worst_heatmap_path = "temp_heatmap.png"
     if worst_frame is not None:
-        with tempfile.NamedTemporaryFile(prefix="verichain_heatmap_", suffix=".png", delete=False) as h_file:
-            worst_heatmap_path = h_file.name
         cv2.imwrite(worst_heatmap_path, generate_annotated_heatmap(worst_frame, worst_faces))
         
     return {
