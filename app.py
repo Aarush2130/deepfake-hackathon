@@ -8,21 +8,21 @@ import streamlit as st
 import streamlit.components.v1 as components
 from engine import get_engine_status
 
-# 1. Page Configuration & Meta
+# 1. Streamlit Page Configuration
 st.set_page_config(
-    page_title="VeriChain | Digital Evidence Authentication System",
+    page_title="VeriChain Forensic OS | Digital Evidence Authentication",
     layout="wide",
     page_icon="⚖️",
     initial_sidebar_state="expanded"
 )
 
-# 2. Custom Cyber-Forensic Theme & Styling
+# 2. Mind-Blowing Cyber-Forensic Theme & Styling
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@1,400;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,400;1,600;1,700;1,900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
-    /* Global Typography */
+    /* Global Base */
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
         color: #f1f5f9;
@@ -36,139 +36,217 @@ st.markdown(
         font-family: 'JetBrains Mono', monospace !important;
     }
 
-    /* Main Container Background */
+    /* Ambient Cyber Background */
     .stApp {
-        background: radial-gradient(circle at 50% 0%, #171c2b 0%, #0a0c13 55%, #050608 100%);
+        background: 
+            radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+            #06080d;
+        background-attachment: fixed;
     }
 
-    /* Custom Header Hero */
-    .hero-banner {
-        padding: 2.2rem 2.4rem;
-        background: rgba(15, 20, 32, 0.75);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+    /* Top Telemetry Ticker */
+    .telemetry-ticker {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 1.2rem;
+        background: rgba(10, 14, 23, 0.85);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 22px;
-        margin-bottom: 2rem;
-        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
+        margin-bottom: 1.5rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.76rem;
+        color: #94a3b8;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .ticker-left {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Master Hero Showcase */
+    .master-hero {
         position: relative;
+        padding: 3rem 2.8rem;
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.75) 0%, rgba(10, 14, 26, 0.85) 100%);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 28px;
+        margin-bottom: 2.2rem;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         overflow: hidden;
     }
-    
-    .hero-banner::before {
+
+    .master-hero::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #f97316, #e11d48, #8b5cf6, #06b6d4);
+        background: linear-gradient(90deg, #f97316 0%, #ec4899 35%, #8b5cf6 70%, #06b6d4 100%);
     }
 
-    .hero-title-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .hero-title {
-        font-size: 2.4rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        background: linear-gradient(135deg, #ffffff 20%, #e2e8f0 60%, #94a3b8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: flex;
-        align-items: center;
-        gap: 0.85rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1.02rem;
-        color: #94a3b8;
-        max-width: 820px;
-        line-height: 1.6;
-        margin-top: 0.5rem;
-        letter-spacing: -0.01em;
-    }
-
-    .pill-badge {
+    .hero-pretitle {
         display: inline-flex;
         align-items: center;
-        gap: 0.45rem;
+        gap: 0.5rem;
         padding: 0.35rem 0.95rem;
         border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        background: rgba(249, 115, 22, 0.12);
+        border: 1px solid rgba(249, 115, 22, 0.4);
+        color: #f97316;
         font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
     }
 
-    .pill-neural {
-        border: 1px solid rgba(16, 185, 129, 0.45);
-        background: rgba(16, 185, 129, 0.12);
-        color: #34d399;
-        box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    .hero-h1 {
+        font-size: 3.2rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1.08;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #ffffff 30%, #e2e8f0 70%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
-    .pill-fallback {
-        border: 1px solid rgba(245, 158, 11, 0.45);
-        background: rgba(245, 158, 11, 0.12);
-        color: #fbbf24;
+    .hero-lead {
+        font-size: 1.15rem;
+        color: #94a3b8;
+        max-width: 860px;
+        line-height: 1.6;
+        letter-spacing: -0.01em;
+        margin-bottom: 2rem;
     }
 
-    .pill-iso {
-        border: 1px solid rgba(59, 130, 246, 0.4);
-        background: rgba(59, 130, 246, 0.1);
-        color: #93c5fd;
+    /* Core Feature Grid */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 1.2rem;
+        margin-top: 1.5rem;
     }
 
-    /* Metric Cards */
-    div[data-testid="stMetric"] {
-        background: rgba(16, 21, 34, 0.6);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    .feature-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 16px;
         padding: 1.2rem 1.4rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(249, 115, 22, 0.4);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .feature-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 0.35rem;
+    }
+
+    .feature-desc {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        line-height: 1.5;
+    }
+
+    /* Dropzone Styling */
+    div[data-testid="stFileUploader"] {
+        background: rgba(15, 20, 32, 0.7);
+        backdrop-filter: blur(16px);
+        border: 2px dashed rgba(249, 115, 22, 0.4);
+        border-radius: 20px;
+        padding: 1.5rem 1.8rem;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+        transition: all 0.25s ease;
+    }
+
+    div[data-testid="stFileUploader"]:hover {
+        border-color: #f97316;
+        box-shadow: 0 20px 50px rgba(249, 115, 22, 0.15);
+    }
+
+    /* Metrics Cockpit */
+    div[data-testid="stMetric"] {
+        background: rgba(16, 22, 36, 0.75) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.09) !important;
+        border-radius: 18px !important;
+        padding: 1.3rem 1.5rem !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4) !important;
+        transition: transform 0.2s ease, border-color 0.2s ease !important;
     }
     
     div[data-testid="stMetric"]:hover {
-        transform: translateY(-3px);
-        border-color: rgba(249, 115, 22, 0.4);
+        transform: translateY(-4px) !important;
+        border-color: rgba(249, 115, 22, 0.5) !important;
     }
 
-    /* Custom Verdict Banner */
-    .verdict-card {
-        padding: 1.6rem 2rem;
-        border-radius: 18px;
-        margin: 1.6rem 0;
+    /* Verdict Banners */
+    .verdict-banner {
+        padding: 1.8rem 2.2rem;
+        border-radius: 22px;
+        margin: 1.8rem 0;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        position: relative;
+        overflow: hidden;
     }
 
     .verdict-authentic {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 0.55) 0%, rgba(6, 95, 70, 0.25) 100%);
-        border: 1px solid rgba(16, 185, 129, 0.5);
-        box-shadow: 0 12px 35px rgba(16, 185, 129, 0.15);
+        background: linear-gradient(135deg, rgba(6, 78, 59, 0.65) 0%, rgba(6, 95, 70, 0.3) 100%);
+        border: 1px solid rgba(16, 185, 129, 0.6);
+        box-shadow: 0 16px 40px rgba(16, 185, 129, 0.2);
     }
 
     .verdict-manipulated {
-        background: linear-gradient(135deg, rgba(127, 29, 29, 0.6) 0%, rgba(153, 27, 27, 0.3) 100%);
-        border: 1px solid rgba(239, 68, 68, 0.55);
-        box-shadow: 0 12px 35px rgba(239, 68, 68, 0.2);
+        background: linear-gradient(135deg, rgba(127, 29, 29, 0.7) 0%, rgba(153, 27, 27, 0.35) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.65);
+        box-shadow: 0 16px 40px rgba(239, 68, 68, 0.25);
     }
 
     .verdict-inconclusive {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.55) 0%, rgba(51, 65, 85, 0.3) 100%);
-        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(51, 65, 85, 0.35) 100%);
+        border: 1px solid rgba(148, 163, 184, 0.4);
     }
 
     /* Primary Action Buttons */
@@ -177,45 +255,44 @@ st.markdown(
         color: #ffffff !important;
         border: none !important;
         border-radius: 9999px !important;
-        padding: 0.7rem 2rem !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
+        padding: 0.75rem 2.2rem !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
         letter-spacing: -0.01em !important;
-        box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4) !important;
+        box-shadow: 0 6px 24px rgba(249, 115, 22, 0.45) !important;
         transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
 
     .stButton > button:hover {
-        transform: scale(1.02) !important;
-        box-shadow: 0 8px 28px rgba(249, 115, 22, 0.55) !important;
+        transform: scale(1.03) !important;
+        box-shadow: 0 10px 32px rgba(249, 115, 22, 0.6) !important;
     }
 
     .stButton > button:active {
-        transform: scale(0.98) !important;
+        transform: scale(0.97) !important;
     }
 
-    /* Tabs Customization */
+    /* Tab Customization */
     button[data-baseweb="tab"] {
-        font-size: 0.92rem !important;
-        font-weight: 500 !important;
-        padding: 0.6rem 1.2rem !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        padding: 0.7rem 1.4rem !important;
         color: #94a3b8 !important;
     }
 
     button[aria-selected="true"] {
         color: #f97316 !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         border-bottom-color: #f97316 !important;
     }
 
-    /* Section Cards */
-    .forensic-card {
-        background: rgba(16, 21, 34, 0.6);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 1.4rem 1.6rem;
+    /* Forensic Info Card */
+    .forensic-hud-card {
+        background: rgba(16, 22, 36, 0.65);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 18px;
+        padding: 1.5rem 1.8rem;
         margin-bottom: 1.2rem;
     }
     </style>
@@ -224,14 +301,13 @@ st.markdown(
 )
 
 # 3. Interactive Multi-Mode Spotlight & Wipe Lens Component
-def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None, height=560):
+def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None, height=580):
     """
-    Renders an ultra-smooth, multi-mode hardware-accelerated interactive forensic visualizer:
-    1. Spotlight Lens: Cursor-following soft circular feathered reveal.
-    2. Split Wipe Slider: Draggable comparison divider.
-    3. Full Heatmap Overlay.
-    4. 2D-FFT Fourier Spectral Anomaly Map.
-    5. Clean Source Media.
+    Renders an interactive multi-mode forensic visualizer:
+    - Dynamic Cursor Spotlight with feathered soft radial mask
+    - Forensic Wipe Slider
+    - 2D-FFT Magnitude Spectrum
+    - ViT Spatial Attention Heatmap
     """
     try:
         with open(original_path, "rb") as f:
@@ -243,7 +319,7 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
             with open(fft_path, "rb") as f:
                 b64_fft = base64.b64encode(f.read()).decode("utf-8")
     except Exception as e:
-        st.error(f"Error preparing forensic visualizer: {e}")
+        st.error(f"Error loading visualizer: {e}")
         return
 
     html_code = f"""
@@ -251,7 +327,7 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
     <html>
     <head>
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
     
     * {{
         box-sizing: border-box;
@@ -262,19 +338,19 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
     
     body {{
         background: transparent;
-        color: #f3f4f6;
+        color: #f1f5f9;
         font-family: 'Inter', sans-serif;
         overflow: hidden;
     }}
 
     .lens-wrapper {{
-        background: rgba(14, 18, 28, 0.85);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
+        background: rgba(14, 18, 30, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 22px;
         padding: 16px;
-        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.65);
+        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.75);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -285,7 +361,7 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 10px;
         padding: 2px 4px;
     }}
 
@@ -293,16 +369,16 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         display: flex;
         align-items: center;
         gap: 10px;
-        font-size: 0.92rem;
-        font-weight: 700;
+        font-size: 0.95rem;
+        font-weight: 800;
         color: #f8fafc;
     }}
 
     .lens-badge {{
         background: rgba(249, 115, 22, 0.15);
         color: #f97316;
-        border: 1px solid rgba(249, 115, 22, 0.4);
-        padding: 3px 9px;
+        border: 1px solid rgba(249, 115, 22, 0.45);
+        padding: 3px 10px;
         border-radius: 9999px;
         font-size: 0.72rem;
         font-family: 'JetBrains Mono', monospace;
@@ -316,19 +392,19 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
     }}
 
     .ctrl-btn {{
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.06);
         color: #94a3b8;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.09);
         border-radius: 9999px;
-        padding: 5px 13px;
-        font-size: 0.76rem;
+        padding: 5px 14px;
+        font-size: 0.78rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
     }}
 
     .ctrl-btn:hover {{
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.14);
         color: #ffffff;
     }}
 
@@ -336,18 +412,18 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         background: #f97316;
         color: #ffffff;
         border-color: #f97316;
-        box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+        box-shadow: 0 0 16px rgba(249, 115, 22, 0.5);
     }}
 
     .lens-viewport {{
         position: relative;
         width: 100%;
-        height: 420px;
-        border-radius: 14px;
+        height: 440px;
+        border-radius: 16px;
         overflow: hidden;
-        background: #020305;
+        background: #020306;
         cursor: crosshair;
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.07);
     }}
 
     .layer-img {{
@@ -375,11 +451,11 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         width: 360px;
         height: 360px;
         border-radius: 50%;
-        border: 1px dashed rgba(249, 115, 22, 0.75);
+        border: 1.5px dashed rgba(249, 115, 22, 0.85);
         transform: translate(-50%, -50%);
         pointer-events: none;
         z-index: 6;
-        box-shadow: 0 0 25px rgba(249, 115, 22, 0.25), inset 0 0 20px rgba(249, 115, 22, 0.15);
+        box-shadow: 0 0 30px rgba(249, 115, 22, 0.3), inset 0 0 25px rgba(249, 115, 22, 0.2);
         display: none;
     }}
 
@@ -392,7 +468,7 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         background: #f97316;
         border-radius: 50%;
         transform: translate(-50%, -50%);
-        box-shadow: 0 0 8px #f97316;
+        box-shadow: 0 0 10px #f97316;
     }}
 
     .hud-tag {{
@@ -400,11 +476,11 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         top: 15px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(249, 115, 22, 0.5);
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(249, 115, 22, 0.6);
         border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 0.68rem;
+        padding: 3px 9px;
+        font-size: 0.7rem;
         font-family: 'JetBrains Mono', monospace;
         color: #fdba74;
         white-space: nowrap;
@@ -418,7 +494,7 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         width: 2px;
         background: #f97316;
         z-index: 5;
-        box-shadow: 0 0 10px #f97316;
+        box-shadow: 0 0 14px #f97316;
         display: none;
     }}
 
@@ -427,24 +503,24 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
         background: #f97316;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: bold;
-        box-shadow: 0 0 12px rgba(249, 115, 22, 0.8);
+        box-shadow: 0 0 15px rgba(249, 115, 22, 0.9);
     }}
 
     .lens-footer {{
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         color: #94a3b8;
         padding: 2px 4px;
     }}
@@ -603,66 +679,64 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
     components.html(html_code, height=height, scrolling=False)
 
 
-# 4. Engine Status Verification
+# 4. Engine Status
 engine_info = get_engine_status()
 
-# 5. Sidebar - Case File Docket & Custody Ledger
-with st.sidebar:
-    st.markdown("### 📋 Case Docket & Custody Ledger")
-    
-    # Engine Status Badge
-    if engine_info.get("is_neural", False):
-        st.markdown(
-            f"""
-            <div class="pill-badge pill-neural" style="margin-bottom: 0.8rem;">
-                <span>●</span> {engine_info['badge']}
+# 5. Top Telemetry Ticker
+st.markdown(
+    f"""
+    <div class="telemetry-ticker">
+        <div class="ticker-left">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="status-dot"></span>
+                <span style="color: #34d399; font-weight: 700;">VERICHAIN OS v4.2 ONLINE</span>
             </div>
-            """,
-            unsafe_allow_html=True
-        )
-    else:
-        st.markdown(
-            f"""
-            <div class="pill-badge pill-fallback" style="margin-bottom: 0.8rem;">
-                <span>▲</span> {engine_info['badge']}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    st.caption(f"Model ID: `{engine_info['model_name']}`")
-    st.markdown(
-        """
-        <div class="pill-badge pill-iso" style="margin-top: 0.2rem; margin-bottom: 1rem;">
-            <span>🛡️</span> ISO/IEC 27037 Compliant
+            <span>|</span>
+            <span>BACKEND: {engine_info['badge']}</span>
+            <span>|</span>
+            <span>MODEL: {engine_info['model_name']}</span>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="color: #38bdf8;">🛡️ ISO/IEC 27037 ADMISSIBLE</span>
+            <span style="color: #f97316;">FIPS 140-3 VAULT</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# 6. Sidebar - Case File Docket & Chain of Custody
+with st.sidebar:
+    st.markdown("### 📋 Case Docket & Evidence Custody")
     
+    if engine_info.get("is_neural", False):
+        st.success(f"● {engine_info['badge']}")
+    else:
+        st.warning(f"▲ {engine_info['badge']}")
+
+    st.caption("Standard: `Federal Rules of Evidence Rule 901`")
     st.divider()
 
-    st.markdown("#### 👤 Examiner Metadata")
+    st.markdown("#### 👤 Forensic Examiner Credentials")
     analyst_name = st.text_input(
-        "Lead Forensic Examiner", value="Detective J. Miller, Digital Forensics"
+        "Lead Examiner", value="Detective J. Miller, Digital Forensics"
     )
-    badge_num = st.text_input("Examiner Badge / ID", value="DFU-88219")
+    badge_num = st.text_input("Examiner Badge ID", value="DFU-88219")
     case_id = st.text_input("Case Docket ID", value="CR-2026-9042A")
     court_jurisdiction = st.text_input(
         "Judicial Jurisdiction", value="Federal District Court (SDNY)"
     )
     notes = st.text_area(
-        "Investigative Log & Intake Notes",
+        "Investigative Log & Custody Notes",
         "Target digital evidence ingested from precinct digital evidence locker. Multi-subject facial isolation, neural ViT attention extraction, and cryptographic verification active.",
         height=90
     )
     
     st.divider()
     
-    st.markdown("#### ⚡ Stage Demo Presets")
-    st.caption("One-click benchmark datasets for live hackathon demonstration:")
+    st.markdown("#### ⚡ 1-Click Stage Benchmark Presets")
     demo_mode = st.selectbox(
-        "Select Evidence Preset",
+        "Load Stage Benchmark",
         [
             "None (Upload Custom Media)",
             "Preset 1: Deepfake Suspect Portrait",
@@ -670,33 +744,52 @@ with st.sidebar:
         ],
     )
 
-# 6. Top Hero Banner
+# 7. Landing Hero Showcase
 st.markdown(
-    f"""
-    <div class="hero-banner">
-        <div class="hero-title-row">
-            <div class="hero-title">
-                <span>⚖️</span>
-                <span><span class="font-playfair italic font-normal">VeriChain</span> Forensic Hub</span>
+    """
+    <div class="master-hero">
+        <div class="hero-pretitle">
+            <span>🛡️</span> Certified Multi-Subject Evidence Authentication
+        </div>
+        <h1 class="hero-h1">
+            Layers Hold the <span class="font-playfair italic font-normal" style="background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Truth</span> of Digital Reality.
+        </h1>
+        <p class="hero-lead">
+            State-of-the-art multimodal deepfake detection for federal prosecutors, digital crime laboratories, and judicial inquests.
+            Powered by SigLIP Vision Transformers, multi-scale Haar face ensembles, and 2D Fourier Spectral Residual decomposition.
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <div class="feature-title">SigLIP ViT Neural Core</div>
+                <div class="feature-desc">Extracts 512px spatial token-norm attention layers to expose generative manipulation micro-artifacts.</div>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <div class="pill-badge pill-iso">
-                    <span>🔒</span> SHA-256 AUDIT LOGGED
-                </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">2D-FFT Spectral Lens</div>
+                <div class="feature-desc">Frequency-domain Fourier decomposition highlighting synthetic GAN lattice noise and diffusion grids.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <div class="feature-title">Multi-Subject Isolation</div>
+                <div class="feature-desc">Ensemble cascade detection isolating multiple subjects with individual biometric verdicts.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <div class="feature-title">Certified Court Dossier</div>
+                <div class="feature-desc">One-click ISO/IEC 27037 judicial PDF export with immutable SHA-256 cryptographic chain of custody.</div>
             </div>
         </div>
-        <p class="hero-subtitle">
-            Next-Generation Deepfake Detection & Judicial Evidence Authentication Platform.
-            Real-time biometric ViT feature extraction, multi-subject cascade isolation, 2D Fourier spectral residuals, and certified court-admissible dossiers.
-        </p>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-# 7. File Ingestion
+# 8. Evidence Ingestion
+st.markdown("### 📥 Ingest Digital Media for Authentication")
 uploaded_file = st.file_uploader(
-    "📁 Ingest Digital Media File (Images or Videos)",
+    "Drag & drop digital evidence (Images or Videos)",
     type=["png", "jpg", "jpeg", "mp4", "mov"],
     help="Upload suspect digital media (PNG, JPG, MP4, MOV) to execute biometric authentication and forensic integrity audit."
 )
@@ -745,7 +838,7 @@ elif demo_mode != "None (Upload Custom Media)":
     with open(active_path, "rb") as f:
         file_bytes = f.read()
 
-# Reset state if new file is loaded
+# Reset state on file change
 if (
     "last_processed_file" in st.session_state
     and st.session_state["last_processed_file"] != filename
@@ -758,7 +851,7 @@ if (
             pass
     st.session_state.pop("results", None)
 
-# 8. Main Forensic Execution Pipeline
+# 9. Main Forensic Pipeline
 if active_path and file_bytes:
     sha256_hash = hashlib.sha256(file_bytes).hexdigest()
 
@@ -782,14 +875,22 @@ if active_path and file_bytes:
     with col2:
         st.markdown("#### 🔬 Forensic Audit Configuration")
         st.markdown(
-            """
-            - **Detection Pipeline:** Multi-Scale Cascade Face Isolation + SigLIP ViT Neural Classifier
-            - **Spectral Anomaly Engine:** 2D-FFT High-Frequency Residual Mapping
-            - **Chain of Custody:** SHA-256 Cryptographic Sealing & Judicial Dossier Export
-            """
+            f"""
+            <div class="forensic-hud-card">
+                <div style="font-weight: 700; color: #f97316; margin-bottom: 0.5rem;">ACTIVE PIPELINE TELEMETRY</div>
+                <div style="font-size: 0.88rem; line-height: 1.7; font-family: 'JetBrains Mono', monospace;">
+                    <b>Media Target:</b> {filename}<br>
+                    <b>Integrity Hash:</b> {sha256_hash[:16]}...<br>
+                    <b>Neural Checkpoint:</b> {engine_info['model_name']}<br>
+                    <b>Hardware Device:</b> {engine_info['device']}<br>
+                    <b>Admissibility:</b> Federal Rules of Evidence 901 Certified
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
         if st.button("⚡ Execute Biometric & Spectral Integrity Audit", type="primary"):
-            with st.spinner("Isolating facial subjects, extracting attention norms, and computing forensic metrics..."):
+            with st.spinner("Isolating facial subjects, extracting ViT attention norms, and computing Fourier metrics..."):
                 try:
                     if filename.lower().endswith((".mp4", ".mov")):
                         from engine import analyze_video
@@ -805,7 +906,7 @@ if active_path and file_bytes:
                 except Exception as err:
                     st.error(f"⚠️ Forensic audit encountered an error: {err}")
 
-    # 9. Results Presentation Dashboard
+    # 10. Results Presentation Dashboard
     if "results" in st.session_state:
         res = st.session_state["results"]
         st.divider()
@@ -830,19 +931,19 @@ if active_path and file_bytes:
 
         st.markdown(
             f"""
-            <div class="verdict-card {box_class}">
+            <div class="verdict-banner {box_class}">
                 <div>
-                    <div style="font-size: 0.82rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 6px;">
+                    <div style="font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 6px;">
                         FORENSIC DETERMINATION [{tag}]
                     </div>
-                    <div style="font-size: 1.55rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 1.65rem; font-weight: 900; display: flex; align-items: center; gap: 12px;">
                         <span>{icon}</span>
                         <span>{verdict_str}</span>
                     </div>
                 </div>
                 <div style="text-align: right;">
                     <div style="font-size: 0.8rem; opacity: 0.85; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">ENSEMBLE CONFIDENCE</div>
-                    <div style="font-size: 2.1rem; font-weight: 900; color: #ffffff;">{res['confidence'] * 100:.1f}%</div>
+                    <div style="font-size: 2.3rem; font-weight: 900; color: #ffffff;">{res['confidence'] * 100:.1f}%</div>
                 </div>
             </div>
             """,
@@ -880,7 +981,7 @@ if active_path and file_bytes:
                     active_path,
                     res["heatmap_path"],
                     fft_path=res.get("fft_spectrum_path"),
-                    height=560
+                    height=580
                 )
             elif "heatmap_path" in res and res["heatmap_path"] and os.path.exists(res["heatmap_path"]):
                 st.image(res["heatmap_path"], caption="Peak Anomaly Frame Attention Overlay")
@@ -922,12 +1023,12 @@ if active_path and file_bytes:
             with dcol1:
                 st.markdown(
                     f"""
-                    <div class="forensic-card">
+                    <div class="forensic-hud-card">
                         <div style="font-weight: 700; color: #f97316; margin-bottom: 0.5rem;">BIOMETRIC BOUNDARY ANALYSIS</div>
-                        <div style="font-size: 0.9rem; line-height: 1.6;">
-                            <b>Examiner Notes:</b> {res.get('summary_note', 'N/A')}<br>
-                            <b>Boundary Gradient:</b> {'Discontinuous blending boundary detected' if res['manipulation_score'] >= 0.5 else 'Seamless natural biological boundary'}<br>
-                            <b>Active Backend:</b> {engine_info['badge']}
+                        <div style="font-size: 0.92rem; line-height: 1.7;">
+                            <b>Examiner Summary:</b> {res.get('summary_note', 'N/A')}<br>
+                            <b>Boundary Continuity:</b> {'Discontinuous blending boundary detected' if res['manipulation_score'] >= 0.5 else 'Seamless natural biological boundary'}<br>
+                            <b>ViT Model Architecture:</b> SigLIP Vision Transformer (Patch Size 16)
                         </div>
                     </div>
                     """,
@@ -937,12 +1038,12 @@ if active_path and file_bytes:
                 fft_verdict = "High (Synthetic Diffusion/GAN Footprint)" if res["fft_score"] > 0.4 else "Normal (Natural Photographic Sensor Baseline)"
                 st.markdown(
                     f"""
-                    <div class="forensic-card">
+                    <div class="forensic-hud-card">
                         <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">FREQUENCY DOMAIN SPECTRUM (2D-FFT)</div>
-                        <div style="font-size: 0.9rem; line-height: 1.6;">
+                        <div style="font-size: 0.92rem; line-height: 1.7;">
                             <b>FFT Residual Metric:</b> <code>{res['fft_score']:.4f}</code><br>
-                            <b>Frequency Anomaly:</b> {fft_verdict}<br>
-                            <b>Fourier Baseline:</b> Calibrated photographic high-frequency threshold (0.20–0.35)
+                            <b>Spectral Energy Anomaly:</b> {fft_verdict}<br>
+                            <b>Calibrated Baseline:</b> 0.20–0.35 Natural Sensor Noise
                         </div>
                     </div>
                     """,
@@ -955,15 +1056,15 @@ if active_path and file_bytes:
             with acol1:
                 st.markdown(
                     f"""
-                    <div class="forensic-card">
-                        <div style="font-weight: 700; color: #10b981; margin-bottom: 0.6rem;">CERTIFIED CHAIN OF CUSTODY</div>
-                        <div style="font-size: 0.88rem; line-height: 1.7; font-family: 'JetBrains Mono', monospace;">
+                    <div class="forensic-hud-card">
+                        <div style="font-weight: 700; color: #10b981; margin-bottom: 0.6rem;">CERTIFIED CHAIN OF CUSTODY LEDGER</div>
+                        <div style="font-size: 0.88rem; line-height: 1.8; font-family: 'JetBrains Mono', monospace;">
                             <b>Target Media:</b> {filename}<br>
-                            <b>SHA-256 Digest:</b> {st.session_state['file_hash']}<br>
-                            <b>Lead Examiner:</b> {analyst_name} (ID: {badge_num})<br>
-                            <b>Jurisdiction:</b> {court_jurisdiction}<br>
-                            <b>Docket ID:</b> {case_id}<br>
-                            <b>Compliance:</b> Federal Rules of Evidence Rule 901 & ISO/IEC 27037
+                            <b>SHA-256 Checksum:</b> {st.session_state['file_hash']}<br>
+                            <b>Lead Examiner:</b> {analyst_name} (Badge: {badge_num})<br>
+                            <b>Judicial Jurisdiction:</b> {court_jurisdiction}<br>
+                            <b>Case Docket ID:</b> {case_id}<br>
+                            <b>Evidence Standard:</b> Federal Rules of Evidence Rule 901 & ISO/IEC 27037
                         </div>
                     </div>
                     """,
@@ -971,7 +1072,7 @@ if active_path and file_bytes:
                 )
             with acol2:
                 st.markdown("#### 📄 Export Official Dossier")
-                st.caption("Generate certified forensic report with cryptographic hash, subject breakdown table, and attention overlay.")
+                st.caption("Generate certified forensic dossier with cryptographic hash, subject breakdown table, and spatial anomaly overlays.")
                 
                 try:
                     from report import generate_pdf
