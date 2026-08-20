@@ -16,288 +16,281 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Mind-Blowing Cyber-Forensic Theme & Styling
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,400;1,600;1,700;1,900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+# 2. Cyber-Forensic CSS Theme
+st.html(
+"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@1,400;1,600;1,700;1,900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
-    /* Global Base */
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-        color: #f1f5f9;
-    }
-    
-    .font-playfair {
-        font-family: 'Playfair Display', serif !important;
-    }
-    
-    .font-mono {
-        font-family: 'JetBrains Mono', monospace !important;
-    }
+/* Global Reset & Typography */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif !important;
+    color: #f1f5f9;
+}
 
-    /* Ambient Cyber Background */
-    .stApp {
-        background: 
-            radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.08) 0%, transparent 40%),
-            radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
-            radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-            #06080d;
-        background-attachment: fixed;
-    }
+.font-playfair {
+    font-family: 'Playfair Display', serif !important;
+}
 
-    /* Top Telemetry Ticker */
-    .telemetry-ticker {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.6rem 1.2rem;
-        background: rgba(10, 14, 23, 0.85);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 9999px;
-        margin-bottom: 1.5rem;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.76rem;
-        color: #94a3b8;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    }
+.font-mono {
+    font-family: 'JetBrains Mono', monospace !important;
+}
 
-    .ticker-left {
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
-    }
+/* Ambient Cyber Gradient Background */
+.stApp {
+    background: 
+        radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        #06080d !important;
+    background-attachment: fixed !important;
+}
 
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #10b981;
-        border-radius: 50%;
-        display: inline-block;
-        box-shadow: 0 0 10px #10b981;
-        animation: pulseDot 2s infinite;
-    }
+/* Top Telemetry Ticker */
+.telemetry-ticker {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1.4rem;
+    background: rgba(10, 14, 23, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    margin-bottom: 1.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
 
-    @keyframes pulseDot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.85); }
-    }
+.ticker-left {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
 
-    /* Master Hero Showcase */
-    .master-hero {
-        position: relative;
-        padding: 3rem 2.8rem;
-        background: linear-gradient(135deg, rgba(17, 24, 39, 0.75) 0%, rgba(10, 14, 26, 0.85) 100%);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 28px;
-        margin-bottom: 2.2rem;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        overflow: hidden;
-    }
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 10px #10b981;
+    animation: pulseDot 2s infinite;
+}
 
-    .master-hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #f97316 0%, #ec4899 35%, #8b5cf6 70%, #06b6d4 100%);
-    }
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
 
-    .hero-pretitle {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.35rem 0.95rem;
-        border-radius: 9999px;
-        background: rgba(249, 115, 22, 0.12);
-        border: 1px solid rgba(249, 115, 22, 0.4);
-        color: #f97316;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin-bottom: 1.2rem;
-    }
+/* Master Hero Showcase */
+.master-hero {
+    position: relative;
+    padding: 2.8rem 2.6rem;
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.75) 0%, rgba(10, 14, 26, 0.85) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 26px;
+    margin-bottom: 2rem;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+}
 
-    .hero-h1 {
-        font-size: 3.2rem;
-        font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 1.08;
-        margin-bottom: 1rem;
-        background: linear-gradient(135deg, #ffffff 30%, #e2e8f0 70%, #94a3b8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
+.master-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f97316 0%, #ec4899 35%, #8b5cf6 70%, #06b6d4 100%);
+}
 
-    .hero-lead {
-        font-size: 1.15rem;
-        color: #94a3b8;
-        max-width: 860px;
-        line-height: 1.6;
-        letter-spacing: -0.01em;
-        margin-bottom: 2rem;
-    }
+.hero-pretitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.95rem;
+    border-radius: 9999px;
+    background: rgba(249, 115, 22, 0.12);
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    color: #f97316;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+}
 
-    /* Core Feature Grid */
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 1.2rem;
-        margin-top: 1.5rem;
-    }
+.hero-h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
 
-    .feature-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 16px;
-        padding: 1.2rem 1.4rem;
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+.hero-lead {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    max-width: 860px;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    margin-bottom: 2rem;
+}
 
-    .feature-card:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(249, 115, 22, 0.4);
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-    }
+/* Core Feature Grid */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1.5rem;
+}
 
-    .feature-icon {
-        font-size: 1.5rem;
-        margin-bottom: 0.6rem;
-    }
+.feature-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+    padding: 1.2rem 1.4rem;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-    .feature-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #f8fafc;
-        margin-bottom: 0.35rem;
-    }
+.feature-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(249, 115, 22, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
 
-    .feature-desc {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        line-height: 1.5;
-    }
+.feature-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.6rem;
+}
 
-    /* Dropzone Styling */
-    div[data-testid="stFileUploader"] {
-        background: rgba(15, 20, 32, 0.7);
-        backdrop-filter: blur(16px);
-        border: 2px dashed rgba(249, 115, 22, 0.4);
-        border-radius: 20px;
-        padding: 1.5rem 1.8rem;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-        transition: all 0.25s ease;
-    }
+.feature-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 0.35rem;
+}
 
-    div[data-testid="stFileUploader"]:hover {
-        border-color: #f97316;
-        box-shadow: 0 20px 50px rgba(249, 115, 22, 0.15);
-    }
+.feature-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
 
-    /* Metrics Cockpit */
-    div[data-testid="stMetric"] {
-        background: rgba(16, 22, 36, 0.75) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.09) !important;
-        border-radius: 18px !important;
-        padding: 1.3rem 1.5rem !important;
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4) !important;
-        transition: transform 0.2s ease, border-color 0.2s ease !important;
-    }
-    
-    div[data-testid="stMetric"]:hover {
-        transform: translateY(-4px) !important;
-        border-color: rgba(249, 115, 22, 0.5) !important;
-    }
+/* Dropzone Styling */
+div[data-testid="stFileUploader"] {
+    background: rgba(15, 20, 32, 0.7);
+    backdrop-filter: blur(16px);
+    border: 2px dashed rgba(249, 115, 22, 0.4);
+    border-radius: 20px;
+    padding: 1.5rem 1.8rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.25s ease;
+}
 
-    /* Verdict Banners */
-    .verdict-banner {
-        padding: 1.8rem 2.2rem;
-        border-radius: 22px;
-        margin: 1.8rem 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-        position: relative;
-        overflow: hidden;
-    }
+div[data-testid="stFileUploader"]:hover {
+    border-color: #f97316;
+    box-shadow: 0 20px 50px rgba(249, 115, 22, 0.15);
+}
 
-    .verdict-authentic {
-        background: linear-gradient(135deg, rgba(6, 78, 59, 0.65) 0%, rgba(6, 95, 70, 0.3) 100%);
-        border: 1px solid rgba(16, 185, 129, 0.6);
-        box-shadow: 0 16px 40px rgba(16, 185, 129, 0.2);
-    }
+/* Metrics Cockpit */
+div[data-testid="stMetric"] {
+    background: rgba(16, 22, 36, 0.75) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    border-radius: 18px !important;
+    padding: 1.3rem 1.5rem !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4) !important;
+    transition: transform 0.2s ease, border-color 0.2s ease !important;
+}
 
-    .verdict-manipulated {
-        background: linear-gradient(135deg, rgba(127, 29, 29, 0.7) 0%, rgba(153, 27, 27, 0.35) 100%);
-        border: 1px solid rgba(239, 68, 68, 0.65);
-        box-shadow: 0 16px 40px rgba(239, 68, 68, 0.25);
-    }
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: rgba(249, 115, 22, 0.5) !important;
+}
 
-    .verdict-inconclusive {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(51, 65, 85, 0.35) 100%);
-        border: 1px solid rgba(148, 163, 184, 0.4);
-    }
+/* Verdict Banners */
+.verdict-banner {
+    padding: 1.8rem 2.2rem;
+    border-radius: 22px;
+    margin: 1.8rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    position: relative;
+    overflow: hidden;
+}
 
-    /* Primary Action Buttons */
-    .stButton > button {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 9999px !important;
-        padding: 0.75rem 2.2rem !important;
-        font-weight: 700 !important;
-        font-size: 1rem !important;
-        letter-spacing: -0.01em !important;
-        box-shadow: 0 6px 24px rgba(249, 115, 22, 0.45) !important;
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    }
+.verdict-authentic {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.65) 0%, rgba(6, 95, 70, 0.3) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.6);
+    box-shadow: 0 16px 40px rgba(16, 185, 129, 0.2);
+}
 
-    .stButton > button:hover {
-        transform: scale(1.03) !important;
-        box-shadow: 0 10px 32px rgba(249, 115, 22, 0.6) !important;
-    }
+.verdict-manipulated {
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.7) 0%, rgba(153, 27, 27, 0.35) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.65);
+    box-shadow: 0 16px 40px rgba(239, 68, 68, 0.25);
+}
 
-    .stButton > button:active {
-        transform: scale(0.97) !important;
-    }
+.verdict-inconclusive {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(51, 65, 85, 0.35) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
 
-    /* Tab Customization */
-    button[data-baseweb="tab"] {
-        font-size: 0.95rem !important;
-        font-weight: 600 !important;
-        padding: 0.7rem 1.4rem !important;
-        color: #94a3b8 !important;
-    }
+/* Primary Action Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 9999px !important;
+    padding: 0.75rem 2.2rem !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    letter-spacing: -0.01em !important;
+    box-shadow: 0 6px 24px rgba(249, 115, 22, 0.45) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
 
-    button[aria-selected="true"] {
-        color: #f97316 !important;
-        font-weight: 800 !important;
-        border-bottom-color: #f97316 !important;
-    }
+.stButton > button:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 10px 32px rgba(249, 115, 22, 0.6) !important;
+}
 
-    /* Forensic Info Card */
-    .forensic-hud-card {
-        background: rgba(16, 22, 36, 0.65);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 18px;
-        padding: 1.5rem 1.8rem;
-        margin-bottom: 1.2rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
+/* Tab Customization */
+button[data-baseweb="tab"] {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    padding: 0.7rem 1.4rem !important;
+    color: #94a3b8 !important;
+}
+
+button[aria-selected="true"] {
+    color: #f97316 !important;
+    font-weight: 800 !important;
+    border-bottom-color: #f97316 !important;
+}
+
+/* Forensic HUD Card */
+.forensic-hud-card {
+    background: rgba(16, 22, 36, 0.65);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 1.2rem;
+}
+</style>
+"""
 )
 
 # 3. Interactive Multi-Mode Spotlight & Wipe Lens Component
@@ -683,26 +676,25 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
 engine_info = get_engine_status()
 
 # 5. Top Telemetry Ticker
-st.markdown(
-    f"""
-    <div class="telemetry-ticker">
-        <div class="ticker-left">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="status-dot"></span>
-                <span style="color: #34d399; font-weight: 700;">VERICHAIN OS v4.2 ONLINE</span>
-            </div>
-            <span>|</span>
-            <span>BACKEND: {engine_info['badge']}</span>
-            <span>|</span>
-            <span>MODEL: {engine_info['model_name']}</span>
+st.html(
+f"""
+<div class="telemetry-ticker">
+    <div class="ticker-left">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="status-dot"></span>
+            <span style="color: #34d399; font-weight: 700;">VERICHAIN OS v4.2 ONLINE</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: #38bdf8;">🛡️ ISO/IEC 27037 ADMISSIBLE</span>
-            <span style="color: #f97316;">FIPS 140-3 VAULT</span>
-        </div>
+        <span>|</span>
+        <span>BACKEND: {engine_info['badge']}</span>
+        <span>|</span>
+        <span>MODEL: {engine_info['model_name']}</span>
     </div>
-    """,
-    unsafe_allow_html=True
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="color: #38bdf8;">🛡️ ISO/IEC 27037 ADMISSIBLE</span>
+        <span style="color: #f97316;">FIPS 140-3 VAULT</span>
+    </div>
+</div>
+"""
 )
 
 # 6. Sidebar - Case File Docket & Chain of Custody
@@ -745,45 +737,44 @@ with st.sidebar:
     )
 
 # 7. Landing Hero Showcase
-st.markdown(
-    """
-    <div class="master-hero">
-        <div class="hero-pretitle">
-            <span>🛡️</span> Certified Multi-Subject Evidence Authentication
-        </div>
-        <h1 class="hero-h1">
-            Layers Hold the <span class="font-playfair italic font-normal" style="background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Truth</span> of Digital Reality.
-        </h1>
-        <p class="hero-lead">
-            State-of-the-art multimodal deepfake detection for federal prosecutors, digital crime laboratories, and judicial inquests.
-            Powered by SigLIP Vision Transformers, multi-scale Haar face ensembles, and 2D Fourier Spectral Residual decomposition.
-        </p>
+st.html(
+"""
+<div class="master-hero">
+    <div class="hero-pretitle">
+        <span>🛡️</span> Certified Multi-Subject Evidence Authentication
+    </div>
+    <h1 class="hero-h1">
+        Layers Hold the <span class="font-playfair italic font-normal" style="background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Truth</span> of Digital Reality.
+    </h1>
+    <p class="hero-lead">
+        State-of-the-art multimodal deepfake detection for federal prosecutors, digital crime laboratories, and judicial inquests.
+        Powered by SigLIP Vision Transformers, multi-scale Haar face ensembles, and 2D Fourier Spectral Residual decomposition.
+    </p>
 
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🧠</div>
-                <div class="feature-title">SigLIP ViT Neural Core</div>
-                <div class="feature-desc">Extracts 512px spatial token-norm attention layers to expose generative manipulation micro-artifacts.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <div class="feature-title">2D-FFT Spectral Lens</div>
-                <div class="feature-desc">Frequency-domain Fourier decomposition highlighting synthetic GAN lattice noise and diffusion grids.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">👥</div>
-                <div class="feature-title">Multi-Subject Isolation</div>
-                <div class="feature-desc">Ensemble cascade detection isolating multiple subjects with individual biometric verdicts.</div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚖️</div>
-                <div class="feature-title">Certified Court Dossier</div>
-                <div class="feature-desc">One-click ISO/IEC 27037 judicial PDF export with immutable SHA-256 cryptographic chain of custody.</div>
-            </div>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <div class="feature-title">SigLIP ViT Neural Core</div>
+            <div class="feature-desc">Extracts 512px spatial token-norm attention layers to expose generative manipulation micro-artifacts.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-title">2D-FFT Spectral Lens</div>
+            <div class="feature-desc">Frequency-domain Fourier decomposition highlighting synthetic GAN lattice noise and diffusion grids.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">👥</div>
+            <div class="feature-title">Multi-Subject Isolation</div>
+            <div class="feature-desc">Ensemble cascade detection isolating multiple subjects with individual biometric verdicts.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚖️</div>
+            <div class="feature-title">Certified Court Dossier</div>
+            <div class="feature-desc">One-click ISO/IEC 27037 judicial PDF export with immutable SHA-256 cryptographic chain of custody.</div>
         </div>
     </div>
-    """,
-    unsafe_allow_html=True
+</div>
+"""
 )
 
 # 8. Evidence Ingestion
@@ -874,20 +865,19 @@ if active_path and file_bytes:
 
     with col2:
         st.markdown("#### 🔬 Forensic Audit Configuration")
-        st.markdown(
-            f"""
-            <div class="forensic-hud-card">
-                <div style="font-weight: 700; color: #f97316; margin-bottom: 0.5rem;">ACTIVE PIPELINE TELEMETRY</div>
-                <div style="font-size: 0.88rem; line-height: 1.7; font-family: 'JetBrains Mono', monospace;">
-                    <b>Media Target:</b> {filename}<br>
-                    <b>Integrity Hash:</b> {sha256_hash[:16]}...<br>
-                    <b>Neural Checkpoint:</b> {engine_info['model_name']}<br>
-                    <b>Hardware Device:</b> {engine_info['device']}<br>
-                    <b>Admissibility:</b> Federal Rules of Evidence 901 Certified
-                </div>
+        st.html(
+        f"""
+        <div class="forensic-hud-card">
+            <div style="font-weight: 700; color: #f97316; margin-bottom: 0.5rem;">ACTIVE PIPELINE TELEMETRY</div>
+            <div style="font-size: 0.88rem; line-height: 1.7; font-family: 'JetBrains Mono', monospace;">
+                <b>Media Target:</b> {filename}<br>
+                <b>Integrity Hash:</b> {sha256_hash[:16]}...<br>
+                <b>Neural Checkpoint:</b> {engine_info['model_name']}<br>
+                <b>Hardware Device:</b> {engine_info['device']}<br>
+                <b>Admissibility:</b> Federal Rules of Evidence 901 Certified
             </div>
-            """,
-            unsafe_allow_html=True
+        </div>
+        """
         )
         if st.button("⚡ Execute Biometric & Spectral Integrity Audit", type="primary"):
             with st.spinner("Isolating facial subjects, extracting ViT attention norms, and computing Fourier metrics..."):
@@ -929,25 +919,24 @@ if active_path and file_bytes:
             icon = "✅"
             tag = "AUTHENTIC DIGITAL EVIDENCE"
 
-        st.markdown(
-            f"""
-            <div class="verdict-banner {box_class}">
-                <div>
-                    <div style="font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 6px;">
-                        FORENSIC DETERMINATION [{tag}]
-                    </div>
-                    <div style="font-size: 1.65rem; font-weight: 900; display: flex; align-items: center; gap: 12px;">
-                        <span>{icon}</span>
-                        <span>{verdict_str}</span>
-                    </div>
+        st.html(
+        f"""
+        <div class="verdict-banner {box_class}">
+            <div>
+                <div style="font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; opacity: 0.85; margin-bottom: 6px;">
+                    FORENSIC DETERMINATION [{tag}]
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 0.8rem; opacity: 0.85; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">ENSEMBLE CONFIDENCE</div>
-                    <div style="font-size: 2.3rem; font-weight: 900; color: #ffffff;">{res['confidence'] * 100:.1f}%</div>
+                <div style="font-size: 1.65rem; font-weight: 900; display: flex; align-items: center; gap: 12px;">
+                    <span>{icon}</span>
+                    <span>{verdict_str}</span>
                 </div>
             </div>
-            """,
-            unsafe_allow_html=True
+            <div style="text-align: right;">
+                <div style="font-size: 0.8rem; opacity: 0.85; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">ENSEMBLE CONFIDENCE</div>
+                <div style="font-size: 2.3rem; font-weight: 900; color: #ffffff;">{res['confidence'] * 100:.1f}%</div>
+            </div>
+        </div>
+        """
         )
 
         # Telemetry Cockpit Cards
@@ -1021,54 +1010,51 @@ if active_path and file_bytes:
             st.markdown("#### 📊 Quantitative Forensic Anomaly Telemetry")
             dcol1, dcol2 = st.columns(2)
             with dcol1:
-                st.markdown(
-                    f"""
-                    <div class="forensic-hud-card">
-                        <div style="font-weight: 700; color: #f97316; margin-bottom: 0.5rem;">BIOMETRIC BOUNDARY ANALYSIS</div>
-                        <div style="font-size: 0.92rem; line-height: 1.7;">
-                            <b>Examiner Summary:</b> {res.get('summary_note', 'N/A')}<br>
-                            <b>Boundary Continuity:</b> {'Discontinuous blending boundary detected' if res['manipulation_score'] >= 0.5 else 'Seamless natural biological boundary'}<br>
-                            <b>ViT Model Architecture:</b> SigLIP Vision Transformer (Patch Size 16)
-                        </div>
+                st.html(
+                f"""
+                <div class="forensic-hud-card">
+                    <div style="font-weight: 700; color: #f97316; margin-bottom: 0.5rem;">BIOMETRIC BOUNDARY ANALYSIS</div>
+                    <div style="font-size: 0.92rem; line-height: 1.7;">
+                        <b>Examiner Summary:</b> {res.get('summary_note', 'N/A')}<br>
+                        <b>Boundary Continuity:</b> {'Discontinuous blending boundary detected' if res['manipulation_score'] >= 0.5 else 'Seamless natural biological boundary'}<br>
+                        <b>ViT Model Architecture:</b> SigLIP Vision Transformer (Patch Size 16)
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                </div>
+                """
                 )
             with dcol2:
                 fft_verdict = "High (Synthetic Diffusion/GAN Footprint)" if res["fft_score"] > 0.4 else "Normal (Natural Photographic Sensor Baseline)"
-                st.markdown(
-                    f"""
-                    <div class="forensic-hud-card">
-                        <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">FREQUENCY DOMAIN SPECTRUM (2D-FFT)</div>
-                        <div style="font-size: 0.92rem; line-height: 1.7;">
-                            <b>FFT Residual Metric:</b> <code>{res['fft_score']:.4f}</code><br>
-                            <b>Spectral Energy Anomaly:</b> {fft_verdict}<br>
-                            <b>Calibrated Baseline:</b> 0.20–0.35 Natural Sensor Noise
-                        </div>
+                st.html(
+                f"""
+                <div class="forensic-hud-card">
+                    <div style="font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">FREQUENCY DOMAIN SPECTRUM (2D-FFT)</div>
+                    <div style="font-size: 0.92rem; line-height: 1.7;">
+                        <b>FFT Residual Metric:</b> <code>{res['fft_score']:.4f}</code><br>
+                        <b>Spectral Energy Anomaly:</b> {fft_verdict}<br>
+                        <b>Calibrated Baseline:</b> 0.20–0.35 Natural Sensor Noise
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                </div>
+                """
                 )
 
         with tab4:
             st.markdown("#### ⚖️ Judicial Admissibility & Evidence Chain-of-Custody")
             acol1, acol2 = st.columns([1.2, 0.8], gap="large")
             with acol1:
-                st.markdown(
-                    f"""
-                    <div class="forensic-hud-card">
-                        <div style="font-weight: 700; color: #10b981; margin-bottom: 0.6rem;">CERTIFIED CHAIN OF CUSTODY LEDGER</div>
-                        <div style="font-size: 0.88rem; line-height: 1.8; font-family: 'JetBrains Mono', monospace;">
-                            <b>Target Media:</b> {filename}<br>
-                            <b>SHA-256 Checksum:</b> {st.session_state['file_hash']}<br>
-                            <b>Lead Examiner:</b> {analyst_name} (Badge: {badge_num})<br>
-                            <b>Judicial Jurisdiction:</b> {court_jurisdiction}<br>
-                            <b>Case Docket ID:</b> {case_id}<br>
-                            <b>Evidence Standard:</b> Federal Rules of Evidence Rule 901 & ISO/IEC 27037
-                        </div>
+                st.html(
+                f"""
+                <div class="forensic-hud-card">
+                    <div style="font-weight: 700; color: #10b981; margin-bottom: 0.6rem;">CERTIFIED CHAIN OF CUSTODY LEDGER</div>
+                    <div style="font-size: 0.88rem; line-height: 1.8; font-family: 'JetBrains Mono', monospace;">
+                        <b>Target Media:</b> {filename}<br>
+                        <b>SHA-256 Checksum:</b> {st.session_state['file_hash']}<br>
+                        <b>Lead Examiner:</b> {analyst_name} (Badge: {badge_num})<br>
+                        <b>Judicial Jurisdiction:</b> {court_jurisdiction}<br>
+                        <b>Case Docket ID:</b> {case_id}<br>
+                        <b>Evidence Standard:</b> Federal Rules of Evidence Rule 901 & ISO/IEC 27037
                     </div>
-                    """,
-                    unsafe_allow_html=True
+                </div>
+                """
                 )
             with acol2:
                 st.markdown("#### 📄 Export Official Dossier")
