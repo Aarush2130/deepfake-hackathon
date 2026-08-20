@@ -576,6 +576,10 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
 
 # 4. Engine Status
 engine_info = get_engine_status()
+model_display_name = engine_info.get("model_name") or engine_info.get("name", "Custom PyTorch Model")
+device_name = engine_info.get("device", "CPU")
+engine_badge = engine_info.get("badge") or engine_info.get("name", "Neural Engine")
+is_online = engine_info.get("online", False) or engine_info.get("is_neural", False)
 
 # 5. Enterprise Header Bar
 st.html(
@@ -590,12 +594,12 @@ f"""
             </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <div class="badge-tag badge-operational">● ENGINE: {engine_info['device']}</div>
+            <div class="badge-tag badge-operational">● ENGINE: {device_name}</div>
             <div class="badge-tag badge-iso">ISO/IEC 27037:2012</div>
         </div>
     </div>
     <div class="header-meta-row">
-        <span>MODEL CHECKPOINT: {engine_info['model_name']}</span>
+        <span>MODEL CHECKPOINT: {model_display_name}</span>
         <span>ADMISSIBILITY: FEDERAL RULES OF EVIDENCE RULE 901</span>
         <span>HASH STANDARD: SHA-256 (FIPS 180-4)</span>
     </div>
@@ -607,10 +611,10 @@ f"""
 with st.sidebar:
     st.markdown("### 📋 Case File Docket")
     
-    if engine_info.get("is_neural", False):
-        st.success(f"● {engine_info['badge']}")
+    if is_online:
+        st.success(f"● {engine_badge}")
     else:
-        st.warning(f"▲ {engine_info['badge']}")
+        st.warning(f"▲ {engine_badge}")
 
     st.caption("Custody Standard: `ISO/IEC 27037 Certified`")
     st.divider()
