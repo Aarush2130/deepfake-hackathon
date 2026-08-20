@@ -193,6 +193,20 @@ def get_fft_anomaly(gray_img):
         return 0.25
 
 
+def get_fft_spectrum_image(gray_img):
+    """Generates a high-contrast 2D-FFT magnitude spectrum heatmap for frequency artifact inspection."""
+    try:
+        standard_gray = cv2.resize(gray_img, (384, 384))
+        f = np.fft.fft2(standard_gray)
+        fshift = np.fft.fftshift(f)
+        magnitude = np.log(np.abs(fshift) + 1e-6)
+        norm_mag = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        color_spectrum = cv2.applyColorMap(norm_mag, cv2.COLORMAP_MAGMA)
+        return color_spectrum
+    except Exception:
+        return None
+
+
 def classify_crop(crop_bgr):
     """Classifies a cropped face or portrait region using the neural model with exact label parsing."""
     if crop_bgr is None or crop_bgr.size == 0:
@@ -388,8 +402,16 @@ def analyze_image(image_path):
     unique_id = uuid.uuid4().hex[:10]
     heatmap_path = f"temp_heatmap_{unique_id}.png"
     cv2.imwrite(heatmap_path, heatmap_img)
-    
     res["heatmap_path"] = heatmap_path
+
+    fft_spectrum_img = get_fft_spectrum_image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY))
+    if fft_spectrum_img is not None:
+        fft_path = f"temp_fft_{unique_id}.png"
+        cv2.imwrite(fft_path, fft_spectrum_img)
+        res["fft_spectrum_path"] = fft_path
+    else:
+        res["fft_spectrum_path"] = None
+
     return res
 
 
@@ -454,10 +476,17 @@ def analyze_video(video_path, max_frames=12):
 
     unique_id = uuid.uuid4().hex[:10]
     worst_heatmap_path = f"temp_heatmap_{unique_id}.png"
+    worst_fft_path = f"temp_fft_{unique_id}.png"
     if worst_frame is not None:
         cv2.imwrite(worst_heatmap_path, generate_annotated_heatmap(worst_frame, worst_faces))
+        fft_spectrum_img = get_fft_spectrum_image(cv2.cvtColor(worst_frame, cv2.COLOR_BGR2GRAY))
+        if fft_spectrum_img is not None:
+            cv2.imwrite(worst_fft_path, fft_spectrum_img)
+        else:
+            worst_fft_path = None
     else:
         worst_heatmap_path = None
+        worst_fft_path = None
         
     return {
         "status": "VIDEO_ANALYZED",
@@ -468,5 +497,6 @@ def analyze_video(video_path, max_frames=12):
         "manipulation_score": max_score,
         "fft_score": float(np.mean([r["fft_score"] for r in sampled_results])),
         "heatmap_path": worst_heatmap_path,
+        "fft_spectrum_path": worst_fft_path,
         "summary_note": summary_note
     }
