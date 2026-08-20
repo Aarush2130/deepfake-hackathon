@@ -872,31 +872,74 @@ if active_path and file_bytes:
                 st.info("No facial subjects isolated in frame.")
 
         with tab3:
-            st.markdown("##### Quantitative Technical Telemetry")
+            st.markdown("##### 📊 Quantitative Technical Telemetry & Multi-Vector Breakdown")
+            
             dcol1, dcol2 = st.columns(2)
             with dcol1:
+                neural_val = res.get('neural_score', res['manipulation_score'])
                 st.html(
                 f"""
                 <div class="enterprise-card">
-                    <div style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">BIOMETRIC BOUNDARY ANALYSIS</div>
-                    <div style="font-size: 0.85rem; line-height: 1.8;">
-                        <b>Examiner Summary:</b> {res.get('summary_note', 'N/A')}<br>
-                        <b>Boundary Continuity:</b> {'Discontinuous blending boundary detected' if res['manipulation_score'] >= 0.5 else 'Seamless natural boundary'}<br>
-                        <b>Model Architecture:</b> SigLIP Vision Transformer (512px Patch Size 16)
+                    <div style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">
+                        🧠 DUAL-SCALE NEURAL CLASSIFICATION
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.8; color: #cbd5e1;">
+                        <b>Neural Manipulation Prob:</b> <code>{neural_val*100:.1f}%</code><br>
+                        <b>Architecture:</b> Fine-Tuned PyTorch EfficientNet-B0 (<code>best_model-v3.pt</code>)<br>
+                        <b>Dual-Scale Extraction:</b> Context Perimeter (25% pad) + Inner Biometric Core (80% box)<br>
+                        <b>Softmax Calibration:</b> Temperature Scaled (T=1.5)
                     </div>
                 </div>
                 """
                 )
+
+                ela_val = res.get('ela_score', 0.20)
+                ela_verdict = "High (Compression Discontinuity / Spliced)" if ela_val > 0.40 else "Nominal (Consistent Sensor Compression)"
+                st.html(
+                f"""
+                <div class="enterprise-card" style="margin-top: 0.8rem;">
+                    <div style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">
+                        🔍 ERROR LEVEL ANALYSIS (ELA)
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.8; color: #cbd5e1;">
+                        <b>Compression Error Delta:</b> <code>{ela_val:.4f}</code><br>
+                        <b>Compression Inconsistency:</b> <span style="color: {'#ef4444' if ela_val > 0.40 else '#10b981'};">{ela_verdict}</span><br>
+                        <b>Quality Benchmark:</b> 90% Quantization Delta Matrix
+                    </div>
+                </div>
+                """
+                )
+
             with dcol2:
-                fft_verdict = "High (Synthetic Diffusion/GAN Energy Signature)" if res["fft_score"] > 0.4 else "Normal (Natural Photographic Baseline)"
+                fft_verdict = "High (Synthetic Diffusion/GAN Energy Signature)" if res["fft_score"] > 0.40 else "Nominal (Natural Optical Sensor Grain)"
                 st.html(
                 f"""
                 <div class="enterprise-card">
-                    <div style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">FREQUENCY DOMAIN RESIDUAL (2D-FFT)</div>
-                    <div style="font-size: 0.85rem; line-height: 1.8;">
+                    <div style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">
+                        ⚡ FREQUENCY DOMAIN RESIDUAL (2D-FFT)
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.8; color: #cbd5e1;">
                         <b>FFT Residual Metric:</b> <code>{res['fft_score']:.4f}</code><br>
-                        <b>Spectral Energy Anomaly:</b> {fft_verdict}<br>
-                        <b>Calibrated Baseline:</b> 0.20–0.35 Natural Sensor Noise
+                        <b>Spectral Energy Anomaly:</b> <span style="color: {'#ef4444' if res['fft_score'] > 0.40 else '#10b981'};">{fft_verdict}</span><br>
+                        <b>High-Frequency Cutoff:</b> Radial Radius > 90px in 256×256 Grid<br>
+                        <b>Global Sharpness Index:</b> {res.get('sharpness', 0.0):.1f} (Laplacian Variance)
+                    </div>
+                </div>
+                """
+                )
+
+                chroma_val = res.get('chroma_score', 0.20)
+                boundary_val = res.get('boundary_score', 0.20)
+                st.html(
+                f"""
+                <div class="enterprise-card" style="margin-top: 0.8rem;">
+                    <div style="font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">
+                        🎨 CHROMINANCE & PERIMETER BOUNDARY
+                    </div>
+                    <div style="font-size: 0.84rem; line-height: 1.8; color: #cbd5e1;">
+                        <b>Chrominance Dispersion (YCbCr/LAB):</b> <code>{chroma_val:.4f}</code><br>
+                        <b>Perimeter Gradient Variance:</b> <code>{boundary_val:.4f}</code><br>
+                        <b>Boundary Seam Status:</b> {'Discontinuous blending seam flagged' if boundary_val > 0.45 else 'Continuous natural gradient transition'}
                     </div>
                 </div>
                 """
