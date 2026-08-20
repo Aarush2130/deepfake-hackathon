@@ -5,3 +5,4 @@ temp_*
 *.pdf
 samples/
 .agents/
+node_modules
