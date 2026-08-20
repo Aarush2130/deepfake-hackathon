@@ -27,11 +27,11 @@ st.markdown(
         font-family: 'Inter', sans-serif;
         color: #f3f4f6;
     }
-    
+
     .font-playfair {
         font-family: 'Playfair Display', serif !important;
     }
-    
+
     .font-mono {
         font-family: 'JetBrains Mono', monospace !important;
     }
@@ -54,7 +54,7 @@ st.markdown(
         position: relative;
         overflow: hidden;
     }
-    
+
     .hero-container::before {
         content: '';
         position: absolute;
@@ -123,7 +123,7 @@ st.markdown(
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         transition: transform 0.2s ease, border-color 0.2s ease;
     }
-    
+
     div[data-testid="stMetric"]:hover {
         transform: translateY(-2px);
         border-color: rgba(249, 115, 22, 0.35);
@@ -209,14 +209,14 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, height=540):
     <head>
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-    
+
     * {{
         box-sizing: border-box;
         margin: 0;
         padding: 0;
         user-select: none;
     }}
-    
+
     body {{
         background: transparent;
         color: #f3f4f6;
@@ -380,16 +380,16 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, height=540):
                 <span>Neural Feature & Anomaly Lens</span>
             </div>
             <div class="lens-controls">
-                <button id="btnLens" class="ctrl-btn active" onclick="setInspectionMode('lens')">🔍 Spotlight Lens</button>
-                <button id="btnHeatmap" class="ctrl-btn" onclick="setInspectionMode('heatmap')">🔥 Full Heatmap</button>
-                <button id="btnOriginal" class="ctrl-btn" onclick="setInspectionMode('orig')">📷 Source Media</button>
+                <button id="btnLens" class="ctrl-btn active" onclick="setInspectionMode('lens')"> Spotlight Lens</button>
+                <button id="btnHeatmap" class="ctrl-btn" onclick="setInspectionMode('heatmap')"> Full Heatmap</button>
+                <button id="btnOriginal" class="ctrl-btn" onclick="setInspectionMode('orig')"> Source Media</button>
             </div>
         </div>
 
         <div id="viewport" class="lens-viewport">
             <img id="baseImg" src="data:image/png;base64,{b64_orig}" class="layer-img" />
             <img id="revealImg" src="data:image/png;base64,{b64_heat}" class="layer-img reveal-img" />
-            
+
             <div id="reticle" class="hud-reticle">
                 <div class="hud-center-dot"></div>
                 <div id="coordTag" class="hud-tag">LENS ACTIVE [R: 180px]</div>
@@ -483,7 +483,7 @@ engine_info = get_engine_status()
 # 5. Sidebar - Case Docket & Ingestion Metadata
 with st.sidebar:
     st.markdown("### 📋 Case File Docket")
-    
+
     # Live Engine Status Badge
     if engine_info.get("is_neural", False):
         st.markdown(
@@ -635,7 +635,7 @@ if active_path and file_bytes:
         st.markdown(
             "Execute deep neural ViT classification, multi-subject cascade isolation, and 2D-FFT frequency domain residual check."
         )
-        if st.button("🚀 Run Biometric & Spectral Integrity Audit", type="primary"):
+        if st.button("Run Biometric & Spectral Integrity Audit", type="primary"):
             with st.spinner("Isolating facial subjects, extracting attention norms, and computing forensic metrics..."):
                 try:
                     if filename.lower().endswith((".mp4", ".mov")):
@@ -711,7 +711,7 @@ if active_path and file_bytes:
         faces_list = res.get("faces", [])
         if faces_list:
             st.markdown(f"### 👥 Subject-by-Subject Facial Isolation ({len(faces_list)} Detected)")
-            
+
             table_data = []
             for f in faces_list:
                 subj_id = f"Subject #{f['subject_id']}"
@@ -723,7 +723,7 @@ if active_path and file_bytes:
                 manip_prob = f"{f['manipulation_score']*100:.1f}%"
                 conf = f"{f['confidence']*100:.1f}%"
                 res_tag = "⚠️ Low-Res (<80px)" if f.get("low_resolution", False) else "Standard"
-                
+
                 table_data.append({
                     "Subject": subj_id,
                     "Coordinates (X, Y, W, H)": bbox,
@@ -732,13 +732,13 @@ if active_path and file_bytes:
                     "Confidence": conf,
                     "Resolution Status": res_tag
                 })
-            
+
             st.dataframe(table_data, hide_index=True)
 
         # 10. Interactive Spotlight Reveal Section
         st.markdown("### 🔍 Spatial Anomaly Spotlight Lens")
         rcol1, rcol2 = st.columns([1.1, 0.9], gap="large")
-        
+
         with rcol1:
             if (
                 "heatmap_path" in res
@@ -755,16 +755,16 @@ if active_path and file_bytes:
         with rcol2:
             st.markdown("#### 🔬 Forensic Diagnostic Telemetry")
             st.markdown(f"**Examiner Summary:**\n`{res.get('summary_note', 'N/A')}`")
-            
+
             fft_verdict = "High (Synthetic Diffusion/GAN Energy Signature)" if res["fft_score"] > 0.4 else "Normal (Natural Photographic Sensor Baseline)"
             boundary_verdict = "Discontinuous Blending Boundary Detected" if res["manipulation_score"] >= 0.50 else "Seamless Natural Gradient"
-            
+
             st.markdown(f"- **Frequency Domain Residual:** `{fft_verdict}`")
             st.markdown(f"- **Biometric Boundary Continuity:** `{boundary_verdict}`")
             st.markdown(f"- **Active ViT Engine:** `{engine_info['badge']}`")
 
             st.divider()
-            
+
             # Court Admissible PDF Dossier Generator
             try:
                 from report import generate_pdf
