@@ -492,7 +492,8 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
     }}
 
     function applyWipe(x) {{
-        const width = viewport.clientWidth;
+        const rect = viewport.getBoundingClientRect();
+        const width = viewport.clientWidth || rect.width || 600;
         const pct = Math.max(0, Math.min(100, (x / width) * 100));
         revealImg.style.maskImage = 'none';
         revealImg.style.webkitMaskImage = 'none';
@@ -524,9 +525,10 @@ def render_interactive_spotlight_lens(original_path, heatmap_path, fft_path=None
             telemetry.innerText = 'LENS READY';
         }} else if (mode === 'wipe') {{
             document.getElementById('btnWipe').classList.add('active');
-            applyWipe(viewport.clientWidth / 2);
+            const w = viewport.clientWidth || 600;
+            applyWipe(w / 2);
             guideText.innerText = 'MODE: FORENSIC WIPE (Move cursor left/right to compare raw media vs heatmap)';
-            telemetry.innerText = 'WIPE ACTIVE';
+            telemetry.innerText = 'WIPE ACTIVE: 50%';
         }} else if (mode === 'heatmap') {{
             document.getElementById('btnHeatmap').classList.add('active');
             revealImg.style.opacity = '1';

@@ -86,37 +86,48 @@ def detect_faces(img_bgr):
     if img_bgr is None:
         return []
     h_orig, w_orig = img_bgr.shape[:2]
-    max_dim = 800
-    scale = 1.0
-    if max(h_orig, w_orig) > max_dim:
-        scale = max_dim / float(max(h_orig, w_orig))
-        work_img = cv2.resize(img_bgr, (int(w_orig * scale), int(h_orig * scale)))
-    else:
-        work_img = img_bgr.copy()
+    
+    scales = [1.0]
+    if max(h_orig, w_orig) > 1000:
+        scales.append(1000.0 / max(h_orig, w_orig))
+    elif min(h_orig, w_orig) < 300:
+        scales.append(2.0)
 
-    gray = cv2.equalizeHist(cv2.cvtColor(work_img, cv2.COLOR_BGR2GRAY))
     detected = []
-
-    if "alt2" in cascades:
-        f = cascades["alt2"].detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
-        if len(f) > 0:
-            detected.extend(f)
-
-    if len(detected) == 0 and "default" in cascades:
-        f = cascades["default"].detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
-        if len(f) > 0:
-            detected.extend(f)
-
-    if len(detected) == 0 and "profile" in cascades:
-        f = cascades["profile"].detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(30, 30))
-        if len(f) > 0:
-            detected.extend(f)
+    for sc in scales:
+        if sc == 1.0:
+            work = img_bgr
+        else:
+            work = cv2.resize(img_bgr, (int(w_orig * sc), int(h_orig * sc)))
+        
+        gray = cv2.cvtColor(work, cv2.COLOR_BGR2GRAY)
+        gray_eq = cv2.equalizeHist(gray)
+        
+        for g in [gray, gray_eq]:
+            if "alt2" in cascades:
+                f = cascades["alt2"].detectMultiScale(g, scaleFactor=1.08, minNeighbors=3, minSize=(25, 25))
+                for (x, y, w, h) in f:
+                    detected.append((int(x / sc), int(y / sc), int(w / sc), int(h / sc)))
+            
+            if len(detected) == 0 and "default" in cascades:
+                f = cascades["default"].detectMultiScale(g, scaleFactor=1.1, minNeighbors=3, minSize=(25, 25))
+                for (x, y, w, h) in f:
+                    detected.append((int(x / sc), int(y / sc), int(w / sc), int(h / sc)))
+            
+            if len(detected) == 0 and "profile" in cascades:
+                f = cascades["profile"].detectMultiScale(g, scaleFactor=1.1, minNeighbors=3, minSize=(25, 25))
+                for (x, y, w, h) in f:
+                    detected.append((int(x / sc), int(y / sc), int(w / sc), int(h / sc)))
+                
+                g_flip = cv2.flip(g, 1)
+                f_flip = cascades["profile"].detectMultiScale(g_flip, scaleFactor=1.1, minNeighbors=3, minSize=(25, 25))
+                for (x, y, w, h) in f_flip:
+                    detected.append((int((g.shape[1] - x - w) / sc), int(y / sc), int(w / sc), int(h / sc)))
 
     if len(detected) == 0:
         return []
 
-    scaled_boxes = [(int(x / scale), int(y / scale), int(w / scale), int(h / scale)) for (x, y, w, h) in detected]
-    return sorted(nms_boxes(scaled_boxes, overlap_thresh=0.35), key=lambda b: b[0])
+    return sorted(nms_boxes(detected, overlap_thresh=0.35), key=lambda b: b[0])
 
 def crop_face(img_bgr, bbox, pad_ratio=0.20):
     h_img, w_img = img_bgr.shape[:2]
@@ -159,7 +170,7 @@ def classify_crop(crop_bgr):
             
             with torch.no_grad():
                 logits = classifier(tensor_img)
-                probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
+                probs = torch.softmax(logits / 1.5, dim=1).cpu().numpy()[0]
                 # Alphabetical classes: Index 0 = Fake, Index 1 = Real
                 fake_prob = float(probs[0])
         except Exception as e:
@@ -231,12 +242,13 @@ def analyze_image(image_path):
         fake_prob, face_fft = classify_crop(crop)
         is_fake = fake_prob >= 0.50
         
+        conf = fake_prob if is_fake else (1.0 - fake_prob)
         faces_results.append({
             "subject_id": idx + 1,
             "bbox": [int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])],
             "padded_coords": [int(c) for c in padded_coords],
             "verdict": "Manipulated (Deepfake)" if is_fake else "Authentic Media",
-            "confidence": fake_prob if is_fake else (1.0 - fake_prob),
+            "confidence": float(conf),
             "manipulation_score": fake_prob,
             "fft_score": face_fft,
             "is_full_frame": is_full_frame_fallback
@@ -249,14 +261,14 @@ def analyze_image(image_path):
         is_fake = single["manipulation_score"] >= 0.50
         verdict = "Manipulated (Deepfake Detected)" if is_fake else "Authentic Media"
         overall_manipulation = single["manipulation_score"]
-        overall_confidence = single["confidence"]
+        overall_confidence = float(np.clip(single["confidence"], 0.55, 0.94))
         summary_note = f"Evaluated as full-frame portrait: {verdict} ({overall_confidence*100:.1f}% confidence)."
         display_face_count = 1
     elif manipulated_faces:
         worst_face = max(faces_results, key=lambda f: f["manipulation_score"])
         verdict = f"Manipulated (Deepfake in {len(manipulated_faces)}/{num_faces} Subjects)"
         overall_manipulation = worst_face["manipulation_score"]
-        overall_confidence = worst_face["confidence"]
+        overall_confidence = float(worst_face["confidence"])
         summary_note = f"Subject #{worst_face['subject_id']} flagged as synthetic ({worst_face['confidence']*100:.1f}% confidence)."
         display_face_count = num_faces
     else:
