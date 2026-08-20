@@ -1,8 +1,10 @@
 venv/
+venv_gpu/
 __pycache__/
 *.pyc
 temp_*
 *.pdf
 samples/
 .agents/
-node_modules
+node_modules/
+.DS_Store

@@ -3,6 +3,30 @@ import os
 from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 
+def sanitize_text(text):
+    """Replace Unicode characters that Helvetica/Latin-1 can't handle with ASCII equivalents."""
+    if not isinstance(text, str):
+        text = str(text)
+    replacements = {
+        '\u2014': '-',   # em-dash
+        '\u2013': '-',   # en-dash
+        '\u2018': "'",   # left single quote
+        '\u2019': "'",   # right single quote
+        '\u201c': '"',   # left double quote
+        '\u201d': '"',   # right double quote
+        '\u2026': '...', # ellipsis
+        '\u2022': '*',   # bullet
+        '\u00d7': 'x',   # multiplication sign
+        '\u2192': '->',  # right arrow
+        '\u2190': '<-',  # left arrow
+        '\u00b0': 'deg', # degree symbol
+    }
+    for unicode_char, ascii_replacement in replacements.items():
+        text = text.replace(unicode_char, ascii_replacement)
+    # Final safety: encode to latin-1 replacing any remaining bad chars
+    text = text.encode('latin-1', errors='replace').decode('latin-1')
+    return text
+
 class ForensicPDF(FPDF):
     def header(self):
         self.set_font("Helvetica", "B", 14)
@@ -27,7 +51,7 @@ def generate_pdf(filename, file_hash, analyst, verdict, confidence, heatmap_path
     
     pdf.set_font("Helvetica", "", 9)
     pdf.cell(45, 5, "Target Media:", border=0)
-    pdf.cell(0, 5, str(filename), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 5, sanitize_text(filename), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     
     pdf.cell(45, 5, "SHA-256 Checksum:", border=0)
     pdf.set_font("Courier", "", 8)
@@ -35,7 +59,7 @@ def generate_pdf(filename, file_hash, analyst, verdict, confidence, heatmap_path
     
     pdf.set_font("Helvetica", "", 9)
     pdf.cell(45, 5, "Lead Examiner:", border=0)
-    pdf.cell(0, 5, str(analyst if analyst else "Digital Forensics Lead"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 5, sanitize_text(analyst if analyst else "Digital Forensics Lead"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     
     pdf.cell(45, 5, "Audit Timestamp:", border=0)
     pdf.cell(0, 5, datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
@@ -51,12 +75,12 @@ def generate_pdf(filename, file_hash, analyst, verdict, confidence, heatmap_path
     else:
         pdf.set_text_color(0, 130, 0)
         
-    pdf.cell(0, 6, f"Determination: {verdict} ({confidence*100:.1f}% Confidence)", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(0, 6, sanitize_text(f"Determination: {verdict} ({confidence*100:.1f}% Confidence)"), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_text_color(0, 0, 0)
     
     if summary_note:
         pdf.set_font("Helvetica", "I", 9)
-        pdf.multi_cell(0, 5, f"Forensic Notes: {summary_note}")
+        pdf.multi_cell(0, 5, sanitize_text(f"Forensic Notes: {summary_note}"))
     pdf.ln(2)
 
     # 3. Subject-by-Subject Breakdown Table

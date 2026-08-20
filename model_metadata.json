@@ -1,0 +1,17 @@
+{
+  "model_file": "best_model-v4.pt",
+  "architecture": "efficientnet_b0",
+  "classes": [
+    "Fake",
+    "Real"
+  ],
+  "class_to_idx": {
+    "Fake": 0,
+    "Real": 1
+  },
+  "fake_index": 0,
+  "real_index": 1,
+  "best_val_accuracy": 93.12242090784044,
+  "epochs_trained": 2,
+  "timestamp": "2026-08-20 18:46:25 UTC"
+}
