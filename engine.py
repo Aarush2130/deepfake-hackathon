@@ -13,7 +13,7 @@ from PIL import Image
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model selection: Auto-detect fresh v4 model if trained, fallback to v3
-model_path = "best_model-v3.pt" if os.path.exists("best_model-v3.pt") else "best_model-v4.pt"
+model_path = "best_model-v4.pt" if os.path.exists("best_model-v4.pt") else "best_model-v3.pt"
 
 # Read model metadata if available
 fake_idx = 1
