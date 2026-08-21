@@ -13,7 +13,7 @@ from PIL import Image
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model selection: Auto-detect fresh v4 model if trained, fallback to v3
-model_path = "best_model-v4.pt" if os.path.exists("best_model-v4.pt") else "best_model-v3.pt"
+model_path = "best_model-v3.pt" if os.path.exists("best_model-v3.pt") else "best_model-v4.pt"
 
 # Read model metadata if available
 fake_idx = 1
@@ -63,7 +63,7 @@ def load_custom_model():
         net = models.efficientnet_b0(weights=None)
         in_features = net.classifier[1].in_features
         net.classifier[1] = nn.Linear(in_features, 2)
-        
+
         if os.path.exists(model_path):
             state_dict = torch.load(model_path, map_location=device, weights_only=False)
             net.load_state_dict(state_dict)
@@ -96,7 +96,7 @@ def nms_boxes(boxes, overlap_thresh=0.3):
     areas = (x2 - x1 + 1) * (y2 - y1 + 1)
     order = areas.argsort()[::-1]
     keep = []
-    
+
     while order.size > 0:
         i = order[0]
         keep.append(i)
@@ -143,7 +143,7 @@ def detect_faces_haar(img_bgr):
     if img_bgr is None:
         return []
     h_orig, w_orig = img_bgr.shape[:2]
-    
+
     scales = [1.0]
     if max(h_orig, w_orig) > 1000:
         scales.append(1000.0 / max(h_orig, w_orig))
@@ -156,26 +156,26 @@ def detect_faces_haar(img_bgr):
             work = img_bgr
         else:
             work = cv2.resize(img_bgr, (int(w_orig * sc), int(h_orig * sc)))
-        
+
         gray = cv2.cvtColor(work, cv2.COLOR_BGR2GRAY)
         gray_eq = cv2.equalizeHist(gray)
-        
+
         for g in [gray, gray_eq]:
             if "alt2" in cascades:
                 f = cascades["alt2"].detectMultiScale(g, scaleFactor=1.08, minNeighbors=4, minSize=(40, 40))
                 for (x, y, w, h) in f:
                     detected.append((int(x / sc), int(y / sc), int(w / sc), int(h / sc)))
-            
+
             if len(detected) == 0 and "default" in cascades:
                 f = cascades["default"].detectMultiScale(g, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40))
                 for (x, y, w, h) in f:
                     detected.append((int(x / sc), int(y / sc), int(w / sc), int(h / sc)))
-            
+
             if len(detected) == 0 and "profile" in cascades:
                 f = cascades["profile"].detectMultiScale(g, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40))
                 for (x, y, w, h) in f:
                     detected.append((int(x / sc), int(y / sc), int(w / sc), int(h / sc)))
-                
+
                 g_flip = cv2.flip(g, 1)
                 f_flip = cascades["profile"].detectMultiScale(g_flip, scaleFactor=1.1, minNeighbors=4, minSize=(40, 40))
                 for (x, y, w, h) in f_flip:
@@ -256,10 +256,10 @@ def get_ela_anomaly(crop_bgr, face_mask=None, quality=90):
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
         _, enc_img = cv2.imencode('.jpg', crop_bgr, encode_param)
         decomp = cv2.imdecode(enc_img, cv2.IMREAD_COLOR)
-        
+
         diff = cv2.absdiff(crop_bgr, decomp)
         diff_gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
-        
+
         # Apply face mask to only measure facial skin region
         if face_mask is not None:
             face_pixels = diff_gray[face_mask > 128]
@@ -267,10 +267,10 @@ def get_ela_anomaly(crop_bgr, face_mask=None, quality=90):
                 face_pixels = diff_gray.ravel()
         else:
             face_pixels = diff_gray.ravel()
-        
+
         ela_std = float(np.std(face_pixels))
         ela_mean = float(np.mean(face_pixels))
-        
+
         raw_score = (ela_std * 0.7 + ela_mean * 0.3) / 12.0
         return float(np.clip(raw_score, 0.05, 0.95))
     except Exception:
@@ -287,10 +287,10 @@ def get_chroma_anomaly(crop_bgr, face_mask=None):
     try:
         ycrcb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2YCrCb)
         _, cr, cb = cv2.split(ycrcb)
-        
+
         lab = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2LAB)
         _, a, b = cv2.split(lab)
-        
+
         if face_mask is not None:
             mask_bool = face_mask > 128
             cr_vals = cr[mask_bool]
@@ -303,12 +303,12 @@ def get_chroma_anomaly(crop_bgr, face_mask=None):
         else:
             cr_vals, cb_vals = cr.ravel(), cb.ravel()
             a_vals, b_vals = a.ravel(), b.ravel()
-        
+
         cr_std = float(np.std(cr_vals))
         cb_std = float(np.std(cb_vals))
         a_std = float(np.std(a_vals))
         b_std = float(np.std(b_vals))
-        
+
         chroma_disp = abs(cr_std - cb_std) + abs(a_std - b_std)
         score = float(np.clip((chroma_disp - 4.0) / 18.0, 0.10, 0.90))
         return score
@@ -328,17 +328,17 @@ def get_boundary_discontinuity(crop_bgr):
             return 0.20
         gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
         lap = cv2.Laplacian(gray, cv2.CV_64F)
-        
+
         pad_h, pad_w = int(h * 0.15), int(w * 0.15)
         outer_mask = np.ones((h, w), dtype=bool)
         outer_mask[pad_h:h-pad_h, pad_w:w-pad_w] = False
-        
+
         inner_lap = lap[pad_h:h-pad_h, pad_w:w-pad_w]
         outer_lap = lap[outer_mask]
-        
+
         var_inner = float(np.var(inner_lap)) if inner_lap.size > 0 else 1.0
         var_outer = float(np.var(outer_lap)) if outer_lap.size > 0 else 1.0
-        
+
         ratio = var_outer / (var_inner + 1e-5)
         anomaly = abs(ratio - 1.0)
         return float(np.clip(anomaly / 2.5, 0.10, 0.90))
@@ -352,7 +352,7 @@ def get_boundary_discontinuity(crop_bgr):
 def classify_crop(crop_bgr):
     """
     Face-Focused Multi-Modal Forensic Classification.
-    
+
     Key design decisions for high accuracy:
     1. NO temperature scaling — raw softmax preserves model confidence
     2. Neural model is dominant signal (0.78 weight) — it's the trained discriminator
@@ -370,16 +370,16 @@ def classify_crop(crop_bgr):
             "chroma_score": 0.15,
             "boundary_score": 0.15
         }
-    
+
     h, w = crop_bgr.shape[:2]
-    
+
     # Generate face-only mask for auxiliary signals
     face_mask = create_face_ellipse_mask(h, w)
-    
+
     # Apply face mask to FFT as well (mask out background before transform)
     gray_crop = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
     gray_masked = cv2.bitwise_and(gray_crop, gray_crop, mask=(face_mask > 128).astype(np.uint8) * 255)
-    
+
     fft_score = get_fft_anomaly(gray_masked)
     ela_score = get_ela_anomaly(crop_bgr, face_mask=face_mask)
     chroma_score = get_chroma_anomaly(crop_bgr, face_mask=face_mask)
@@ -392,29 +392,29 @@ def classify_crop(crop_bgr):
             crop_rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
             pil_img = Image.fromarray(crop_rgb)
             tensor_outer = img_transform(pil_img).unsqueeze(0).to(device)
-            
+
             # 2. Core Biometric Inference (tight center 70% — pure facial features)
             y1, y2 = int(h * 0.15), int(h * 0.85)
             x1, x2 = int(w * 0.15), int(w * 0.85)
             inner_crop = crop_bgr[y1:y2, x1:x2] if (y2 > y1 and x2 > x1) else crop_bgr
             inner_rgb = cv2.cvtColor(inner_crop, cv2.COLOR_BGR2RGB)
             tensor_inner = img_transform(Image.fromarray(inner_rgb)).unsqueeze(0).to(device)
-            
+
             with torch.no_grad():
                 # RAW softmax — NO temperature scaling (T=1.0)
                 # Temperature was killing accuracy by pushing everything toward 50%
                 logits_outer = classifier(tensor_outer)
                 probs_outer = torch.softmax(logits_outer, dim=1).cpu().numpy()[0]
-                
+
                 logits_inner = classifier(tensor_inner)
                 probs_inner = torch.softmax(logits_inner, dim=1).cpu().numpy()[0]
-                
+
                 p_out = float(probs_outer[fake_idx])  # Dynamic Fake probability from model metadata
                 p_in = float(probs_inner[fake_idx])
-                
+
                 # Balanced dual-scale blend (outer context carries 80% weight, inner carries 20%)
                 neural_prob = 0.80 * p_out + 0.20 * p_in
-                
+
         except Exception as e:
             print(f"Neural Inference Error: {e}")
             neural_prob = fft_score
@@ -428,7 +428,7 @@ def classify_crop(crop_bgr):
         W_ELA = 0.04
         W_CHROMA = 0.03
         W_BOUNDARY = 0.03
-        
+
         composite_prob = (
             W_NEURAL * neural_prob +
             W_FFT * fft_score +
@@ -436,7 +436,7 @@ def classify_crop(crop_bgr):
             W_CHROMA * chroma_score +
             W_BOUNDARY * boundary_score
         )
-        
+
         # ── Confidence Amplification ──
         # When neural model is highly confident, preserve clean model verdicts
         if neural_prob >= 0.65:
@@ -476,7 +476,7 @@ def generate_annotated_heatmap(img_bgr, faces_results):
         blurred = cv2.GaussianBlur(gray, (9, 9), 0)
         edges = np.uint8(np.absolute(cv2.Laplacian(blurred, cv2.CV_64F)))
         edges = cv2.GaussianBlur(edges, (15, 15), 0)
-        
+
         norm_cam = cv2.normalize(edges, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         heatmap = cv2.applyColorMap(norm_cam, cv2.COLORMAP_JET)
         blended = cv2.addWeighted(work_img, 0.70, heatmap, 0.30, 0)
@@ -514,7 +514,7 @@ def generate_fft_spectrum_image(img_bgr):
         magnitude = np.log(np.abs(fshift) + 1.0)
         norm_mag = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
         color_mag = cv2.applyColorMap(norm_mag, cv2.COLORMAP_MAGMA)
-        
+
         # Add HUD grid and concentric frequency rings
         h, w = color_mag.shape[:2]
         cv2.circle(color_mag, (w // 2, h // 2), 60, (0, 220, 255), 1, cv2.LINE_AA)
@@ -539,7 +539,7 @@ def analyze_image(image_path):
 
     h_img, w_img = img_bgr.shape[:2]
     detected_bboxes = detect_faces(img_bgr)
-    
+
     is_full_frame_fallback = False
     if len(detected_bboxes) == 0:
         # No face detected — use center crop heuristic instead of entire frame
@@ -568,7 +568,7 @@ def analyze_image(image_path):
         else:
             # Tight face crop with moderate padding (0.15 to keep it face-focused)
             crop, padded_coords = crop_face(img_bgr, bbox, pad_ratio=0.15)
-        
+
         metrics = classify_crop(crop)
         fake_prob = metrics["composite_prob"]
         neural_score = metrics["neural_prob"]
@@ -577,7 +577,7 @@ def analyze_image(image_path):
         chroma_score = metrics["chroma_score"]
         boundary_score = metrics["boundary_score"]
         is_fake = fake_prob >= 0.50
-        
+
         # Calculate face crop sharpness and encode crop thumbnail to base64
         face_sharpness = float(cv2.Laplacian(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()) if crop.size > 0 else 0.0
         crop_thumb = cv2.resize(crop, (160, 160)) if crop.size > 0 else crop
@@ -585,11 +585,11 @@ def analyze_image(image_path):
         crop_b64 = base64.b64encode(buf).decode('utf-8')
 
         conf = fake_prob if is_fake else (1.0 - fake_prob)
-        
+
         # Penalize full-frame fallback confidence (no face detected = lower trust)
         if is_full_frame_fallback:
             conf = float(np.clip(conf * 0.75, 0.50, 0.80))
-        
+
         faces_results.append({
             "subject_id": idx + 1,
             "bbox": [int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3])],
@@ -609,7 +609,7 @@ def analyze_image(image_path):
         })
 
     manipulated_faces = [f for f in faces_results if f["manipulation_score"] >= 0.50]
-    
+
     if is_full_frame_fallback:
         single = faces_results[0]
         is_fake = single["manipulation_score"] >= 0.50
@@ -664,11 +664,11 @@ def analyze_video(video_path, max_frames=10):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Could not open video file: {video_path}")
-        
+
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     step = max(1, total_frames // max_frames)
     frame_idx, scores, worst_score, worst_frame, worst_faces = 0, [], -1.0, None, []
-    
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -698,7 +698,7 @@ def analyze_video(video_path, max_frames=10):
     if worst_frame is not None:
         cv2.imwrite(worst_heatmap_path, generate_annotated_heatmap(worst_frame, worst_faces))
         fft_spectrum_path = generate_fft_spectrum_image(worst_frame)
-        
+
     return {
         "status": "VIDEO_ANALYZED",
         "face_count": max(1, len(worst_faces)),
@@ -721,7 +721,7 @@ def get_engine_status():
     """Returns runtime model telemetry for the UI sidebar."""
     is_cuda = torch.cuda.is_available() and device.type == "cuda"
     dev_name = "CUDA (RTX 4060)" if is_cuda else "CPU"
-    
+
     if classifier is not None:
         return EngineStatus({
             "name": f"Custom EfficientNet-B0 ({dev_name})",
@@ -733,7 +733,7 @@ def get_engine_status():
             "online": True,
             "is_neural": True
         })
-    
+
     return EngineStatus({
         "name": "Spectral FFT Fallback (CPU)",
         "model_name": "2D Fast Fourier Energy Analysis",
